@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Projects — Personal Portfolio</title>
+  <style>
+    :root {
+      --bg-base: #09090b;
+      --bg-surface: #111113;
+      --bg-elevated: #1a1a1f;
+      --border: rgba(255,255,255,0.06);
+      --border-hover: rgba(255,255,255,0.12);
+      --text-primary: #fafafa;
+      --text-secondary: #a1a1aa;
+      --text-muted: #52525b;
+      --accent: #3b82f6;
+      --accent-soft: rgba(59,130,246,0.12);
+      --accent-glow: rgba(59,130,246,0.25);
+      --accent-2: #8b5cf6;
+      --accent-2-soft: rgba(139,92,246,0.12);
+      --success: #22c55e;
+      --success-soft: rgba(34,197,94,0.12);
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+      --font-cn: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      --text-5xl: 48px;
+      --text-4xl: 36px;
+      --text-3xl: 30px;
+      --text-2xl: 24px;
+      --text-xl: 20px;
+      --text-base: 16px;
+      --text-sm: 14px;
+      --text-xs: 12px;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --radius-full: 9999px;
+      --shadow-glow: 0 0 20px var(--accent-glow);
+      --transition-fast: 0.15s ease;
+      --transition-normal: 0.25s ease;
+    }
+    [data-theme="light"] {
+      --bg-base: #ffffff;
+      --bg-surface: #f4f4f5;
+      --bg-elevated: #ffffff;
+      --border: rgba(0,0,0,0.06);
+      --border-hover: rgba(0,0,0,0.12);
+      --text-primary: #09090b;
+      --text-secondary: #71717a;
+      --text-muted: #a1a1aa;
+      --accent: #2563eb;
+      --accent-soft: rgba(37,99,235,0.08);
+      --accent-glow: rgba(37,99,235,0.18);
+      --accent-2: #7c3aed;
+      --accent-2-soft: rgba(124,58,237,0.08);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      background: var(--bg-base);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: var(--text-base);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    button { font: inherit; cursor: pointer; border: none; background: none; }
+    img, svg { display: block; max-width: 100%; }
+
+    /* nav */
+    .topnav {
+      position: sticky; top: 0; z-index: 100;
+      background: color-mix(in oklch, var(--bg-base) 85%, transparent);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .topnav-inner {
+      max-width: 1200px; margin: 0 auto; padding: 0 24px;
+      height: 64px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; color: var(--text-primary); }
+    .nav-links { display: flex; gap: 32px; }
+    .nav-links a { font-size: 14px; color: var(--text-secondary); transition: color var(--transition-fast); }
+    .nav-links a:hover, .nav-links a.active { color: var(--text-primary); text-decoration: none; }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .theme-toggle {
+      width: 40px; height: 40px; display: grid; place-items: center;
+      border-radius: var(--radius-sm); color: var(--text-secondary);
+      transition: background var(--transition-fast), color var(--transition-fast);
+    }
+    .theme-toggle:hover { background: var(--bg-elevated); color: var(--text-primary); }
+    .theme-toggle svg { width: 20px; height: 20px; }
+
+    /* layout */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+    /* page hero */
+    .page-hero {
+      padding: 80px 0 48px;
+    }
+    .page-hero h1 {
+      font-size: var(--text-4xl);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
+    .page-hero p {
+      color: var(--text-secondary);
+      font-size: var(--text-lg);
+      max-width: 56ch;
+    }
+
+    /* filters */
+    .filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 24px 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 40px;
+    }
+    .filter-btn {
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      font-size: var(--text-sm);
+      font-weight: 500;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      background: transparent;
+      transition: all var(--transition-fast);
+    }
+    .filter-btn:hover { border-color: var(--border-hover); color: var(--text-primary); }
+    .filter-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    /* project grid */
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 24px;
+      padding-bottom: 80px;
+    }
+
+    /* project card */
+    .project-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition: border-color var(--transition-normal), transform var(--transition-normal);
+    }
+    .project-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-3px);
+    }
+    .project-cover {
+      aspect-ratio: 16 / 9;
+      background: linear-gradient(135deg, var(--accent-soft), var(--accent-2-soft));
+      display: grid; place-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .project-cover::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(59,130,246,0.06), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.6s ease;
+    }
+    .project-card:hover .project-cover::after {
+      transform: translateX(100%);
+    }
+    .project-cover-icon {
+      color: var(--text-muted);
+      opacity: 0.5;
+    }
+    .project-cover-icon svg { width: 48px; height: 48px; }
+    .project-body {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .project-title {
+      font-size: var(--text-xl);
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .project-desc {
+      color: var(--text-secondary);
+      font-size: var(--text-sm);
+      line-height: 1.6;
+    }
+    .project-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .tag {
+      padding: 3px 10px;
+      border-radius: var(--radius-full);
+      font-size: 11px;
+      font-family: var(--font-mono);
+      letter-spacing: 0.04em;
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+    .tag-purple { background: var(--accent-2-soft); color: var(--accent-2); }
+    .tag-green { background: var(--success-soft); color: var(--success); }
+    .project-links {
+      display: flex;
+      gap: 16px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+      margin-top: auto;
+    }
+    .project-link {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: var(--text-sm);
+      color: var(--text-secondary);
+      transition: color var(--transition-fast);
+    }
+    .project-link:hover { color: var(--accent); text-decoration: none; }
+    .project-link svg { width: 16px; height: 16px; }
+
+    /* status badge */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+    }
+    .status-active { background: var(--success-soft); color: var(--success); }
+    .status-archived { background: rgba(161,161,170,0.12); color: var(--text-muted); }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+    /* footer */
+    .pagefoot {
+      padding: 48px 0;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: var(--text-xs);
+      font-family: var(--font-mono);
+    }
+    .pagefoot-inner {
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;
+    }
+
+    /* responsive */
+    @media (max-width: 768px) {
+      .page-hero { padding: 60px 0 32px; }
+      .page-hero h1 { font-size: var(--text-3xl); }
+      .project-grid { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topnav">
+    <div class="topnav-inner">
+      <a href="homepage.html" class="logo">DevPortfolio</a>
+      <nav class="nav-links">
+        <a href="homepage.html">个人介绍</a>
+        <a href="projects.html" class="active">项目展示</a>
+        <a href="discussion.html">技术交流</a>
+        <a href="resources.html">资源分享</a>
+        <a href="settings.html">设置</a>
+      </nav>
+      <div class="nav-right">
+        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <div class="page-hero">
+        <h1>项目展示</h1>
+        <p>精选项目集合，涵盖 Web 开发、系统架构、开源贡献等方向。</p>
+      </div>
+
+      <!-- filters -->
+      <div class="filters">
+        <button class="filter-btn active" data-filter="all">全部</button>
+        <button class="filter-btn" data-filter="react">React</button>
+        <button class="filter-btn" data-filter="vue">Vue</button>
+        <button class="filter-btn" data-filter="node">Node.js</button>
+        <button class="filter-btn" data-filter="python">Python</button>
+        <button class="filter-btn" data-filter="rust">Rust</button>
+        <button class="filter-btn" data-filter="open-source">开源</button>
+        <button class="filter-btn" data-filter="saas">SaaS</button>
+      </div>
+
+      <!-- project grid -->
+      <div class="project-grid" id="projectGrid">
+
+        <article class="project-card" data-tags="react,node,saas">
+          <div class="project-cover">
+            <div class="project-cover-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+            </div>
+          </div>
+          <div class="project-body">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="project-title">TaskFlow</span>
+              <span class="status-badge status-active"><span class="status-dot"></span>Active</span>
+            </div>
+            <p class="project-desc">团队协作任务管理工具，支持看板、甘特图、自动化工作流。基于 React + Node.js 构建，支持实时同步。</p>
+            <div class="project-tags">
+              <span class="tag">React</span>
+              <span class="tag">Node.js</span>
+              <span class="tag tag-purple">WebSocket</span>
+              <span class="tag tag-green">SaaS</span>
+            </div>
+            <div class="project-links">
+              <a class="project-link" href="#">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                在线演示
+              </a>
+              <a class="project-link" href="#">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+                源码
+              </a>
+            </div>
+          </div>
+        </article>
+
+        <article class="project-card" data-tags="vue,python">
+          <div class="project-cover">
+            <div class="project-cover-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            </div>
+          </div>
+          <div class="project-body">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="project-title">DataViz Studio</span>
+              <span class="status-badge status-active"><span class="status-dot"></span>Active</span>
+            </div>
+            <p class="project-desc">数据可视化平台，支持拖拽式图表构建、实时数据源接入、多格式导出。Vue 3 + Python 后端。</p>
+            <div class="project-tags">
+              <span class="tag">Vue 3</span>
+              <span class="tag">Python</span>
+              <span class="tag tag-purple">D3.js</span>
+            </div>
+            <div class="project-links">
+              <a class="project-link" href="#">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                在线演示
+              </a>
+              <a class="project-link" href="#">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+                源码
+              </a>
+            </div>
+          </div>
+        </article>
+
+        <article class="project-card" data-tags="rust,open-source">
+          <div class="project-cover">
+            <div class="project-cover-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            </div>
+          </div>
+          <div class="project-body">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="project-title">RustLint</span>
+              <span class="status-badge status-active"><span class="status-dot"></span>Active</span>
+            </div>
+            <p class="project-desc">高性能代码静态分析工具，支持自定义规则、CI/CD 集成。纯 Rust 实现，分析速度比同类工具快 10 倍。</p>
+            <div class="project-tags">
+              <span class="tag">Rust</span>
+              <span class="tag tag-green">开源</span>
+              <span class="tag tag-purple">CLI</span>
+            </div>
+            <div class="project-links">
+              <a class="project-link" href="#">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+                源码
+              </a>
+              <a class="project-link" href="#">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                文档
+              </a>
+            </div>
+          </div>
+        </article>
+
+        <article class="project-card" data-tags="react,node,saas">
+          <div class="project-cover">
+            <div class="project-cover-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </div>
+          </div>
+          <div class="project-body">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="project-title">DeployStack</span>
+              <span class="status-badge status-archived"><span class="status-dot"></span>Archived</span>
+            </div>
+            <p class="project-desc">一键部署平台，支持 Docker、K8s、Serverless 多种部署方式。内置监控告警与日志分析。</p>
+            <div class="project-tags">
+              <span class="tag">React</span>
+              <span class="tag">Node.js</span>
+              <span class="tag">Docker</span>
+              <span class="tag tag-green">SaaS</span>
+            </div>
+            <div class="project-links">
+              <a class="project-link" href="#">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                在线演示
+              </a>
+              <a class="project-link" href="#">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+                源码
+              </a>
+            </div>
+          </div>
+        </article>
+
+        <article class="project-card" data-tags="python,open-source">
+          <div class="project-cover">
+            <div class="project-cover-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            </div>
+          </div>
+          <div class="project-body">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="project-title">PyML Toolkit</span>
+              <span class="status-badge status-active"><span class="status-dot"></span>Active</span>
+            </div>
+            <p class="project-desc">机器学习工具集，封装常用算法与数据处理流程，支持 GPU 加速与分布式训练。</p>
+            <div class="project-tags">
+              <span class="tag">Python</span>
+              <span class="tag tag-green">开源</span>
+              <span class="tag tag-purple">ML</span>
+            </div>
+            <div class="project-links">
+              <a class="project-link" href="#">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+                源码
+              </a>
+              <a class="project-link" href="#">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                文档
+              </a>
+            </div>
+          </div>
+        </article>
+
+        <article class="project-card" data-tags="vue,node">
+          <div class="project-cover">
+            <div class="project-cover-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            </div>
+          </div>
+          <div class="project-body">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="project-title">BlogEngine</span>
+              <span class="status-badge status-active"><span class="status-dot"></span>Active</span>
+            </div>
+            <p class="project-desc">现代化博客引擎，支持 Markdown 编辑、标签分类、SEO 优化、多主题切换。Vue 3 + Express。</p>
+            <div class="project-tags">
+              <span class="tag">Vue 3</span>
+              <span class="tag">Express</span>
+              <span class="tag tag-purple">Markdown</span>
+            </div>
+            <div class="project-links">
+              <a class="project-link" href="#">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                在线演示
+              </a>
+              <a class="project-link" href="#">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+                源码
+              </a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </main>
+
+  <footer class="pagefoot">
+    <div class="container pagefoot-inner">
+      <span>© 2026 DevPortfolio</span>
+      <span>Built with passion · v1.0</span>
+    </div>
+  </footer>
+
+  <script>
+    // theme
+    function toggleTheme() {
+      const html = document.documentElement;
+      const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      updateThemeIcon(next);
+    }
+    function updateThemeIcon(t) {
+      document.querySelector('.icon-sun').style.display = t === 'light' ? 'none' : 'block';
+      document.querySelector('.icon-moon').style.display = t === 'light' ? 'block' : 'none';
+    }
+    const saved = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', saved);
+    updateThemeIcon(saved);
+
+    // filter
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const filter = btn.dataset.filter;
+        document.querySelectorAll('.project-card').forEach(card => {
+          if (filter === 'all' || card.dataset.tags.includes(filter)) {
+            card.style.display = '';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

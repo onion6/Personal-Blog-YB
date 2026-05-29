@@ -1,0 +1,231 @@
+.settingsPage {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  max-width: 640px;
+}
+
+.pageHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pageTitle {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.pageDesc {
+  font-size: 16px;
+  color: var(--text-secondary);
+}
+
+.settingSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settingLabel {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.settingDesc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.optionGroup {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.optionBtn {
+  padding: 8px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  transition: all var(--transition-fast);
+}
+
+.optionBtn:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.optionBtnActive {
+  color: var(--accent);
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.colorInput {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.colorPicker {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  background: none;
+  padding: 0;
+}
+
+.colorValue {
+  font-size: 14px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+}
+
+.bannerPreview {
+  padding: 24px;
+  border-radius: var(--radius-md);
+  text-align: center;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 12px;
+}
+
+.bannerInput {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 14px;
+  transition: border-color var(--transition-fast);
+}
+
+.bannerInput:focus {
+  border-color: var(--accent);
+}
+
+.socialLinksList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.socialLinkItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+}
+
+.socialLinkInput {
+  flex: 1;
+  padding: 6px 10px;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.socialLinkInput::placeholder {
+  color: var(--text-secondary);
+}
+
+.socialLinkDivider {
+  width: 1px;
+  height: 20px;
+  background: var(--border-color);
+}
+
+.socialLinkDelete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+
+.socialLinkDelete:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.addLinkBtn {
+  padding: 10px 20px;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px dashed rgba(59, 130, 246, 0.3);
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  width: 100%;
+}
+
+.addLinkBtn:hover {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.saveBtn {
+  padding: 12px 32px;
+  background: var(--accent);
+  border-radius: var(--radius-sm);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  transition: opacity var(--transition-fast);
+  align-self: flex-start;
+}
+
+.saveBtn:hover {
+  opacity: 0.9;
+}
+
+.savedToast {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: var(--radius-sm);
+  color: #22c55e;
+  font-size: 14px;
+  font-weight: 500;
+  margin-left: 12px;
+  animation: fadeInOut 2s ease forwards;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@media (max-width: 640px) {
+  .pageTitle {
+    font-size: 28px;
+  }
+
+  .settingsPage {
+    max-width: 100%;
+  }
+}
