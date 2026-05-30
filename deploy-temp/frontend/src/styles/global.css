@@ -1,0 +1,128 @@
+:root {
+  /* 背景层级 - 深色模式 */
+  --bg-primary: #09090b;      /* 底层背景 */
+  --bg-secondary: #111113;    /* 次级背景 / 输入框 */
+  --bg-card: #18181b;         /* 卡片背景 */
+  --bg-overlay: #27272a;      /* 弹出层/悬浮层背景 */
+  
+  --border-color: rgba(255, 255, 255, 0.08);
+  --text-primary: #fafafa;
+  --text-secondary: #a1a1aa;
+  --accent: #3b82f6;
+  --accent-secondary: #8b5cf6;
+  --glow-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  
+  --font-sans: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+  
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-scroll: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme='light'] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f4f4f5;
+  --bg-card: #ffffff;
+  --bg-overlay: #ffffff;
+  
+  --border-color: rgba(0, 0, 0, 0.08);
+  --text-primary: #18181b;
+  --text-secondary: #71717a;
+  --accent: #3b82f6;
+  --accent-secondary: #8b5cf6;
+  --glow-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+/* 全局交互微动效 */
+button, 
+.clickable {
+  transition: transform 0.1s ease, filter 0.2s ease;
+}
+
+button:active,
+.clickable:active {
+  transform: scale(0.96);
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--accent-secondary);
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  background: none;
+}
+
+input,
+textarea {
+  font-family: inherit;
+  outline: none;
+}
+
+code {
+  font-family: var(--font-mono);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme='light'] ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme='light'] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}

@@ -1,0 +1,44 @@
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  cursor: default;
+}
+
+[data-theme='light'] .tag {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.tagActive {
+  color: var(--accent);
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.tagAccent {
+  color: var(--accent);
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.tagPurple {
+  color: var(--accent-secondary);
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+.tagClickable {
+  cursor: pointer;
+}
+
+.tagClickable:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}

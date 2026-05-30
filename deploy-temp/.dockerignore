@@ -1,0 +1,13 @@
+**/node_modules
+**/dist
+**/.git
+**/.env
+**/database.sqlite
+**/.vscode
+**/.idea
+**/nginx/ssl
+**/*.md
+**/.eslintrc*
+**/coverage
+**/.DS_Store
+**/Thumbs.db

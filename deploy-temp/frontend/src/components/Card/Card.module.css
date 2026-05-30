@@ -1,0 +1,30 @@
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  transition: border-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+  cursor: default;
+}
+
+.cardClickable {
+  cursor: pointer;
+}
+
+.card:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.cardClickable:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--glow-shadow);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+[data-theme='light'] .card:hover {
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme='light'] .cardClickable:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+}
