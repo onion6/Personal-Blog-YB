@@ -32,6 +32,7 @@ app.use(helmet({
       scriptSrc: ["'self'"],
       scriptSrcAttr: ["'none'"],
       styleSrc: ["'self'", "https:", "'unsafe-inline'"],
+      upgradeInsecureRequests: null,
     }
   } : false,
   crossOriginEmbedderPolicy: false,
