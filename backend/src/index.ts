@@ -34,6 +34,9 @@ app.use(helmet({
       styleSrc: ["'self'", "https:", "'unsafe-inline'"],
     }
   } : false,
+  crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: false,
+  crossOriginResourcePolicy: false,
 }));
 
 app.use(cors({
