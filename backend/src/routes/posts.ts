@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { queryAll, queryOne, run } from '../database';
 import { writeLimiter, voteLimiter } from '../middleware';
 import { validateBody, validateIdParam, createPostSchema, createCommentSchema } from '../validate';
+import { requireAuth, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
@@ -52,9 +53,8 @@ router.get('/:id', validateIdParam, (req: Request, res: Response) => {
   res.json({ ...post, comments });
 });
 
-router.post('/', writeLimiter, validateBody(createPostSchema), (req: Request, res: Response) => {
+router.post('/', requireAuth, writeLimiter, validateBody(createPostSchema), (req: AuthRequest, res: Response) => {
   const { title, content, tags } = req.body;
-  // tags 应该是数组，如果是字符串则直接使用
   const tagsStr = typeof tags === 'string' ? tags : JSON.stringify(tags || []);
   
   const result = run(
@@ -84,7 +84,7 @@ router.post('/:id/like', voteLimiter, validateIdParam, (req: Request, res: Respo
   res.json(updated);
 });
 
-router.post('/:id/comments', writeLimiter, validateIdParam, validateBody(createCommentSchema), (req: Request, res: Response) => {
+router.post('/:id/comments', requireAuth, writeLimiter, validateIdParam, validateBody(createCommentSchema), (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const { author, content } = req.body;
 
@@ -93,15 +93,17 @@ router.post('/:id/comments', writeLimiter, validateIdParam, validateBody(createC
     return res.status(404).json({ error: 'Post not found' });
   }
 
+  const authorName = author || req.user!.username;
+
   const result = run(
     'INSERT INTO comments (post_id, author, content) VALUES (?, ?, ?)',
-    [Number(id), author || '匿名', content]
+    [Number(id), authorName, content]
   );
 
   res.json({
     id: result.lastInsertRowid,
     post_id: Number(id),
-    author: author || '匿名',
+    author: authorName,
     content,
     created_at: new Date().toISOString()
   });

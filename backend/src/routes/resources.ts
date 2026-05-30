@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { queryAll, queryOne, run } from '../database';
 import { writeLimiter, voteLimiter } from '../middleware';
 import { validateBody, validateIdParam, createResourceSchema } from '../validate';
+import { requireAuth } from '../middleware/auth';
 
 const router = Router();
 
@@ -18,7 +19,7 @@ router.get('/', (req: Request, res: Response) => {
   res.json(resources);
 });
 
-router.post('/', writeLimiter, validateBody(createResourceSchema), (req: Request, res: Response) => {
+router.post('/', requireAuth, writeLimiter, validateBody(createResourceSchema), (req: Request, res: Response) => {
   const { name, description, url, category, icon_url } = req.body;
   // 支持多分类，如果是数组则序列化为 JSON 字符串
   const categoryStr = Array.isArray(category) ? JSON.stringify(category) : category;

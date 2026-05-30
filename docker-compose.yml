@@ -10,6 +10,7 @@ services:
       - DB_PATH=/app/data/database.sqlite
       - STATIC_DIR=/app/frontend/dist
       - CORS_ORIGINS=http://39.106.212.4
+      - JWT_SECRET=your-super-secret-key-change-this-in-production
     volumes:
       - app-data:/app/data
     expose:

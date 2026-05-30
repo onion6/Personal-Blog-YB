@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
-import { User, FolderKanban, MessageCircle, BookOpen, Settings, Sun, Moon, Menu, X } from 'lucide-react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { User, FolderKanban, MessageCircle, BookOpen, Settings, Sun, Moon, Menu, X, LogIn, LogOut } from 'lucide-react';
 import { useThemeStore } from '../../store/useThemeStore';
+import { useAuthStore } from '../../store/useAuthStore';
 import styles from './Navbar.module.css';
 
 const navItems = [
@@ -13,7 +14,9 @@ const navItems = [
 
 const Navbar = () => {
   const { theme, toggleTheme } = useThemeStore();
+  const { isAuthenticated, user, logout } = useAuthStore();
   const [menuOpen, setMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -29,6 +32,12 @@ const Navbar = () => {
       document.body.style.overflow = '';
     };
   }, [menuOpen]);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+    setMenuOpen(false);
+  };
 
   return (
     <nav className={styles.navbar}>
@@ -57,9 +66,26 @@ const Navbar = () => {
         <button className={styles.iconBtn} onClick={toggleTheme} title="切换主题">
           {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
         </button>
-        <NavLink to="/settings" className={styles.iconBtn}>
-          <Settings size={18} />
-        </NavLink>
+        
+        {isAuthenticated ? (
+          <>
+            <NavLink to="/settings" className={styles.iconBtn} title="设置">
+              <Settings size={18} />
+            </NavLink>
+            <div className={styles.userInfo}>
+              <span className={styles.userName}>{user?.display_name || user?.username}</span>
+              <button className={styles.iconBtn} onClick={handleLogout} title="退出登录">
+                <LogOut size={18} />
+              </button>
+            </div>
+          </>
+        ) : (
+          <NavLink to="/login" className={styles.loginBtn}>
+            <LogIn size={16} />
+            <span>登录</span>
+          </NavLink>
+        )}
+
         <button
           className={`${styles.hamburger} ${menuOpen ? styles.hamburgerOpen : ''}`}
           onClick={() => setMenuOpen(!menuOpen)}
@@ -87,6 +113,41 @@ const Navbar = () => {
               {item.label}
             </NavLink>
           ))}
+          
+          {isAuthenticated ? (
+            <>
+              <NavLink 
+                to="/settings" 
+                className={({ isActive }) =>
+                  `${styles.navLink} ${isActive ? styles.navLinkActive : ''}`
+                }
+                onClick={() => setMenuOpen(false)}
+              >
+                <span className={styles.navLinkIcon}>
+                  <Settings size={18} />
+                </span>
+                设置
+              </NavLink>
+              <div className={styles.mobileUserInfo}>
+                <span className={styles.userName}>{user?.display_name || user?.username}</span>
+                <button className={styles.mobileLogoutBtn} onClick={handleLogout}>
+                  <LogOut size={16} />
+                  <span>退出登录</span>
+                </button>
+              </div>
+            </>
+          ) : (
+            <NavLink 
+              to="/login" 
+              className={styles.navLink}
+              onClick={() => setMenuOpen(false)}
+            >
+              <span className={styles.navLinkIcon}>
+                <LogIn size={18} />
+              </span>
+              登录
+            </NavLink>
+          )}
         </div>
       </div>
     </nav>

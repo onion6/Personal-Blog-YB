@@ -125,6 +125,44 @@
   color: var(--text-primary);
 }
 
+.projectNameRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.projectActions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.actionBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.actionBtn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='light'] .actionBtn:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.actionBtnDanger:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
 .projectDesc {
   font-size: 14px;
   color: var(--text-secondary);

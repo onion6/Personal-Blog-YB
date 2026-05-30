@@ -26,6 +26,7 @@ export async function initDatabasePromise(): Promise<void> {
   db.run(`
     CREATE TABLE IF NOT EXISTS projects (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER REFERENCES users(id),
       name TEXT NOT NULL,
       description TEXT,
       cover_url TEXT,
@@ -81,8 +82,31 @@ export async function initDatabasePromise(): Promise<void> {
   `);
 
   db.run(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE NOT NULL,
+      password TEXT NOT NULL,
+      display_name TEXT,
+      avatar_url TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS invite_codes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      code TEXT UNIQUE NOT NULL,
+      created_by INTEGER,
+      is_used INTEGER DEFAULT 0,
+      used_by INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS profile (
-      id INTEGER PRIMARY KEY CHECK (id = 1),
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER REFERENCES users(id),
       name TEXT,
       title TEXT,
       bio TEXT,
@@ -90,7 +114,8 @@ export async function initDatabasePromise(): Promise<void> {
       skills TEXT,
       timeline TEXT,
       hobbies TEXT,
-      contacts TEXT
+      contacts TEXT,
+      UNIQUE(user_id)
     )
   `);
 

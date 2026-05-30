@@ -79,9 +79,19 @@ const About = () => {
   const [hobbiesForm, setHobbiesForm] = useState<ProfileHobby[]>([]);
   const [contactsForm, setContactsForm] = useState<ProfileContact[]>([]);
 
-  const p = profile!;
+  const p = {
+    ...profile,
+    name: profile?.name || '',
+    title: profile?.title || '',
+    bio: profile?.bio || '',
+    avatar_url: profile?.avatar_url || '',
+    skills: profile?.skills || [],
+    timeline: profile?.timeline || [],
+    hobbies: profile?.hobbies || [],
+    contacts: profile?.contacts || [],
+  };
 
-  const { displayText, isComplete } = useTypewriter(p.bio, 80, 800);
+  const { displayText, isComplete } = useTypewriter(p.bio || '', 80, 800);
   const { scrollYProgress } = useScroll();
   const avatarY = useTransform(scrollYProgress, [0, 1], [0, -100]);
   const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
@@ -92,19 +102,24 @@ const About = () => {
     setEditSection(section);
     switch (section) {
       case 'basic':
-        setBasicForm({ name: p.name, title: p.title, bio: p.bio, avatar_url: p.avatar_url });
+        setBasicForm({
+          name: p.name || '',
+          title: p.title || '',
+          bio: p.bio || '',
+          avatar_url: p.avatar_url || ''
+        });
         break;
       case 'skills':
-        setSkillsForm([...p.skills]);
+        setSkillsForm(p.skills ? [...p.skills] : []);
         break;
       case 'timeline':
-        setTimelineForm([...p.timeline]);
+        setTimelineForm(p.timeline ? [...p.timeline] : []);
         break;
       case 'hobbies':
-        setHobbiesForm([...p.hobbies]);
+        setHobbiesForm(p.hobbies ? [...p.hobbies] : []);
         break;
       case 'contacts':
-        setContactsForm([...p.contacts]);
+        setContactsForm(p.contacts ? [...p.contacts] : []);
         break;
     }
   };

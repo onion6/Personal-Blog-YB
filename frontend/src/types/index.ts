@@ -1,5 +1,7 @@
 export interface Project {
   id: number;
+  user_id?: number;
+  author_name?: string;
   name: string;
   description: string;
   cover_url: string;

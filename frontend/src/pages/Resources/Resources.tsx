@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, ChevronDown, ExternalLink, ThumbsUp, Wrench, BookOpen, Palette, Globe, Plus, Loader2 } from 'lucide-react';
 import { getResources, voteResource, createResource } from '../../api';
 import { useToastStore } from '../../store/useToastStore';
+import { useAuthStore } from '../../store/useAuthStore';
 import type { Resource } from '../../types';
 import Card from '../../components/Card/Card';
 import Modal from '../../components/Modal/Modal';
@@ -29,6 +31,8 @@ const mockResources: Resource[] = [
 
 const Resources = () => {
   const { addToast } = useToastStore();
+  const { isAuthenticated } = useAuthStore();
+  const navigate = useNavigate();
   const [resources, setResources] = useState<Resource[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [openCategories, setOpenCategories] = useState<Set<string>>(new Set(categories.map((c) => c.key)));
@@ -178,10 +182,10 @@ const Resources = () => {
             </div>
             <button 
               className={styles.shareBtn}
-              onClick={() => setShowShareModal(true)}
+              onClick={() => isAuthenticated ? setShowShareModal(true) : navigate('/login')}
             >
               <Plus size={18} />
-              分享资源
+              {isAuthenticated ? '分享资源' : '登录后分享'}
             </button>
           </div>
         </div>

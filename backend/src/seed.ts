@@ -1,6 +1,9 @@
-import { queryOne, run } from './database';
+import { queryOne, run, queryAll } from './database';
+import bcrypt from 'bcryptjs';
 
 export function seedDatabase(): void {
+  seedInviteCodes();
+  seedAdminUser();
   seedProfile();
 
   const projectCount = queryOne('SELECT COUNT(*) as count FROM projects')?.count || 0;
@@ -107,16 +110,19 @@ export function seedDatabase(): void {
 }
 
 function seedProfile(): void {
-  const profileCount = queryOne('SELECT COUNT(*) as count FROM profile')?.count || 0;
-  if (profileCount > 0) return;
+  const adminUser = queryOne('SELECT id FROM users WHERE username = ?', ['admin']);
+  if (!adminUser) return;
+
+  const existingProfile = queryOne('SELECT id FROM profile WHERE user_id = ?', [adminUser.id]);
+  if (existingProfile) return;
 
   run(`
-    INSERT INTO profile (id, name, title, bio, avatar_url, skills, timeline, hobbies, contacts) 
+    INSERT INTO profile (user_id, name, title, bio, avatar_url, skills, timeline, hobbies, contacts) 
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `, [
-    1,
-    'John Doe',
-    '全栈开发工程师 & 开源爱好者',
+    adminUser.id,
+    '管理员',
+    '网站管理员',
     '热爱技术，追求极致的用户体验。专注于 React, Node.js 和架构设计。',
     'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
     JSON.stringify([
@@ -149,5 +155,35 @@ function seedProfile(): void {
     ])
   ]);
 
-  console.log('Profile seed data inserted');
+  console.log('Admin profile seed data inserted');
+}
+
+function seedInviteCodes(): void {
+  const codeCount = queryOne('SELECT COUNT(*) as count FROM invite_codes')?.count || 0;
+  if (codeCount > 0) return;
+
+  const defaultCodes = ['WELCOME2024', 'ADMIN001', 'TEST123'];
+  for (const code of defaultCodes) {
+    run('INSERT INTO invite_codes (code) VALUES (?)', [code]);
+  }
+  console.log('Default invite codes created:', defaultCodes);
+}
+
+async function seedAdminUser(): Promise<void> {
+  const userCount = queryOne('SELECT COUNT(*) as count FROM users')?.count || 0;
+  if (userCount > 0) return;
+
+  const hashedPassword = await bcrypt.hash('admin123', 10);
+  const result = run(
+    'INSERT INTO users (username, password, display_name) VALUES (?, ?, ?)',
+    ['admin', hashedPassword, '管理员']
+  );
+
+  run('INSERT INTO profile (user_id, name, title) VALUES (?, ?, ?)',
+    [result.lastInsertRowid, '管理员', '网站管理员']);
+
+  run('UPDATE invite_codes SET is_used = 1, used_by = ? WHERE code = ?',
+    [result.lastInsertRowid, 'ADMIN001']);
+
+  console.log('Admin user created: admin / admin123');
 }

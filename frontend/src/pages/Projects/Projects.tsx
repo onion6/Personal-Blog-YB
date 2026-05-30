@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Github, ExternalLink, FolderKanban, Plus, Loader2 } from 'lucide-react';
-import { useProjects, useCreateProject } from '../../hooks/useProjects';
+import { useNavigate } from 'react-router-dom';
+import { Github, ExternalLink, FolderKanban, Plus, Loader2, Pencil, Trash2, Save } from 'lucide-react';
+import { useProjects, useCreateProject, useUpdateProject, useDeleteProject } from '../../hooks/useProjects';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { useToastStore } from '../../store/useToastStore';
+import { useAuthStore } from '../../store/useAuthStore';
 import type { Project } from '../../types';
 import Card from '../../components/Card/Card';
 import Tag from '../../components/Tag/Tag';
@@ -16,11 +18,16 @@ const filterTags = ['全部', 'React', 'Vue', 'Node', 'Python', '全栈'];
 const Projects = () => {
   const { layout } = useSettingsStore();
   const { addToast } = useToastStore();
+  const { isAuthenticated, user } = useAuthStore();
+  const navigate = useNavigate();
   const { data: projects = [], isLoading } = useProjects();
   const createProjectMutation = useCreateProject();
+  const updateProjectMutation = useUpdateProject();
+  const deleteProjectMutation = useDeleteProject();
   const [activeFilter, setActiveFilter] = useState('全部');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -106,6 +113,60 @@ const Projects = () => {
     setErrors({});
   };
 
+  const isOwner = (project: Project) => {
+    return isAuthenticated && user && project.user_id === user.id;
+  };
+
+  const handleEdit = (project: Project, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingProject(project);
+    setFormData({
+      name: project.name,
+      description: project.description,
+      cover_url: project.cover_url || '',
+      tech_stack: parseTech(project.tech_stack).join(', '),
+      github_url: project.github_url || '',
+      demo_url: project.demo_url || '',
+      status: project.status || '进行中',
+    });
+    setErrors({});
+  };
+
+  const handleDelete = async (project: Project, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm(`确定要删除项目"${project.name}"吗？`)) return;
+    try {
+      await deleteProjectMutation.mutateAsync(project.id);
+      addToast('项目已删除', 'success');
+    } catch {
+      addToast('删除失败，请稍后重试', 'error');
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!editingProject || !validateForm()) return;
+    setIsSubmitting(true);
+    try {
+      const techArray = formData.tech_stack.split(/[,，、\s]+/).filter(t => t.trim());
+      await updateProjectMutation.mutateAsync({
+        id: editingProject.id,
+        data: { ...formData, tech_stack: techArray },
+      });
+      setEditingProject(null);
+      setFormData({ name: '', description: '', cover_url: '', tech_stack: '', github_url: '', demo_url: '', status: '进行中' });
+      addToast('项目已更新', 'success');
+    } catch {
+      addToast('更新失败，请稍后重试', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCloseEditModal = () => {
+    setEditingProject(null);
+    setErrors({});
+  };
+
   return (
     <div className={styles.projectsPage}>
       <ScrollReveal>
@@ -117,10 +178,10 @@ const Projects = () => {
             </div>
             <button 
               className={styles.createBtn}
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => isAuthenticated ? setShowCreateModal(true) : navigate('/login')}
             >
               <Plus size={18} />
-              新建项目
+              {isAuthenticated ? '新建项目' : '登录后新建'}
             </button>
           </div>
         </div>
@@ -178,7 +239,19 @@ const Projects = () => {
                   )}
                 </div>
                 <div className={styles.projectInfo}>
-                  <h3 className={styles.projectName}>{project.name}</h3>
+                  <div className={styles.projectNameRow}>
+                    <h3 className={styles.projectName}>{project.name}</h3>
+                    {isOwner(project) && (
+                      <div className={styles.projectActions}>
+                        <button className={styles.actionBtn} onClick={(e) => handleEdit(project, e)} title="编辑">
+                          <Pencil size={14} />
+                        </button>
+                        <button className={`${styles.actionBtn} ${styles.actionBtnDanger}`} onClick={(e) => handleDelete(project, e)} title="删除">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   <p className={styles.projectDesc}>{project.description}</p>
                   <div className={styles.projectTags}>
                     {parseTech(project.tech_stack).map((t) => (
@@ -369,6 +442,131 @@ const Projects = () => {
                 </>
               ) : (
                 '创建项目'
+              )}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        open={!!editingProject}
+        onClose={handleCloseEditModal}
+        title="编辑项目"
+      >
+        <div className={styles.formContainer}>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>项目名称 *</label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              className={`${styles.formInput} ${errors.name ? styles.formInputError : ''}`}
+              placeholder="输入项目名称"
+            />
+            {errors.name && <span className={styles.formError}>{errors.name}</span>}
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>项目描述 *</label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              className={`${styles.formTextarea} ${errors.description ? styles.formInputError : ''}`}
+              placeholder="描述你的项目..."
+              rows={4}
+            />
+            {errors.description && <span className={styles.formError}>{errors.description}</span>}
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>技术栈 *</label>
+            <input
+              type="text"
+              name="tech_stack"
+              value={formData.tech_stack}
+              onChange={handleInputChange}
+              className={`${styles.formInput} ${errors.tech_stack ? styles.formInputError : ''}`}
+              placeholder="例如：React, TypeScript, Node.js"
+            />
+            {errors.tech_stack && <span className={styles.formError}>{errors.tech_stack}</span>}
+            <span className={styles.formHint}>多个技术用逗号分隔</span>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>项目状态</label>
+            <select
+              name="status"
+              value={formData.status}
+              onChange={handleInputChange}
+              className={styles.formSelect}
+            >
+              <option value="进行中">进行中</option>
+              <option value="已完成">已完成</option>
+              <option value="已归档">已归档</option>
+              <option value="长期维护">长期维护</option>
+            </select>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>封面图片 URL</label>
+            <input
+              type="text"
+              name="cover_url"
+              value={formData.cover_url}
+              onChange={handleInputChange}
+              className={styles.formInput}
+              placeholder="https://example.com/cover.jpg"
+            />
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>GitHub 地址</label>
+            <input
+              type="text"
+              name="github_url"
+              value={formData.github_url}
+              onChange={handleInputChange}
+              className={styles.formInput}
+              placeholder="https://github.com/..."
+            />
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>演示地址</label>
+            <input
+              type="text"
+              name="demo_url"
+              value={formData.demo_url}
+              onChange={handleInputChange}
+              className={styles.formInput}
+              placeholder="https://..."
+            />
+          </div>
+
+          <div className={styles.formActions}>
+            <button 
+              className={styles.formCancelBtn}
+              onClick={handleCloseEditModal}
+            >
+              取消
+            </button>
+            <button 
+              className={styles.formSubmitBtn}
+              onClick={handleUpdate}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 size={16} className={styles.spinner} />
+                  保存中...
+                </>
+              ) : (
+                <>
+                  <Save size={16} />
+                  保存修改
+                </>
               )}
             </button>
           </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -7,6 +8,7 @@ import { Search, Heart, MessageCircle, ArrowLeft, Clock, Flame, Pencil, BookOpen
 import { getPosts, getPostById, createPost, likePost, getComments, createComment } from '../../api';
 import { useToastStore } from '../../store/useToastStore';
 import { useThemeStore } from '../../store/useThemeStore';
+import { useAuthStore } from '../../store/useAuthStore';
 import type { Post, Comment } from '../../types';
 import Card from '../../components/Card/Card';
 import Tag from '../../components/Tag/Tag';
@@ -67,6 +69,8 @@ const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
 const Discussion = () => {
   const { theme } = useThemeStore();
   const { addToast } = useToastStore();
+  const { isAuthenticated, user } = useAuthStore();
+  const navigate = useNavigate();
   const [posts, setPosts] = useState<Post[]>([]);
   const [activeFilter, setActiveFilter] = useState('全部');
   const [sortMode, setSortMode] = useState<SortMode>('latest');
@@ -164,23 +168,23 @@ const Discussion = () => {
   };
 
   const handleSubmitComment = async () => {
-    if (!selectedPost || !commentAuthor.trim() || !commentContent.trim()) return;
+    if (!selectedPost || !commentContent.trim()) return;
+    const authorName = user?.display_name || user?.username || '匿名';
     try {
-      const cmt = await createComment(selectedPost.id, { author: commentAuthor, content: commentContent });
+      const cmt = await createComment(selectedPost.id, { author: authorName, content: commentContent });
       setComments([...comments, cmt]);
       addToast('评论发表成功', 'success');
     } catch {
       const newCmt: Comment = {
         id: Date.now(),
         post_id: selectedPost.id,
-        author: commentAuthor,
+        author: authorName,
         content: commentContent,
         created_at: new Date().toISOString().split('T')[0],
       };
       setComments([...comments, newCmt]);
       addToast('本地模拟评论发表', 'info');
     }
-    setCommentAuthor('');
     setCommentContent('');
   };
 
@@ -282,21 +286,25 @@ const Discussion = () => {
         <div className={styles.commentSection}>
           <h2 className={styles.commentSectionTitle}>评论 ({comments.length})</h2>
           <div className={styles.commentForm}>
-            <div className={styles.commentInputRow}>
-              <input
-                className={styles.commentInput}
-                placeholder="你的昵称"
-                value={commentAuthor}
-                onChange={(e) => setCommentAuthor(e.target.value)}
-              />
-            </div>
-            <textarea
-              className={styles.commentTextarea}
-              placeholder="写下你的评论..."
-              value={commentContent}
-              onChange={(e) => setCommentContent(e.target.value)}
-            />
-            <button className={styles.submitBtn} onClick={handleSubmitComment}>发表评论</button>
+            {isAuthenticated ? (
+              <>
+                <div className={styles.commentInputRow}>
+                  <span className={styles.commentAuthorDisplay}>{user?.display_name || user?.username}</span>
+                </div>
+                <textarea
+                  className={styles.commentTextarea}
+                  placeholder="写下你的评论..."
+                  value={commentContent}
+                  onChange={(e) => setCommentContent(e.target.value)}
+                />
+                <button className={styles.submitBtn} onClick={handleSubmitComment}>发表评论</button>
+              </>
+            ) : (
+              <div className={styles.commentLoginPrompt}>
+                <span>请先登录后再发表评论</span>
+                <button className={styles.loginLinkBtn} onClick={() => navigate('/login')}>去登录</button>
+              </div>
+            )}
           </div>
           <div className={styles.commentList}>
             {comments.map((c) => (
@@ -325,9 +333,9 @@ const Discussion = () => {
       </ScrollReveal>
 
       <ScrollReveal delay={50}>
-        <button className={styles.toggleEditorBtn} onClick={() => setShowEditor(!showEditor)}>
+        <button className={styles.toggleEditorBtn} onClick={() => isAuthenticated ? setShowEditor(!showEditor) : navigate('/login')}>
           <Pencil size={14} style={{ marginRight: 6, display: 'inline', verticalAlign: 'middle' }} />
-          {showEditor ? '收起编辑器' : '发帖'}
+          {!isAuthenticated ? '登录后发帖' : showEditor ? '收起编辑器' : '发帖'}
         </button>
       </ScrollReveal>
 
