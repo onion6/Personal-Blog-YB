@@ -142,7 +142,31 @@ export async function initDatabasePromise(): Promise<void> {
     )
   `);
 
+  migrateProfileUserId();
+  migrateProjectsUserId();
+
   saveDatabase();
+}
+
+function hasColumn(table: string, column: string): boolean {
+  const result = queryOne(`PRAGMA table_info(${table})`);
+  if (!result) return false;
+  const columns = queryAll(`PRAGMA table_info(${table})`);
+  return columns.some((c: any) => c.name === column);
+}
+
+function migrateProfileUserId(): void {
+  if (!hasColumn('profile', 'user_id')) {
+    console.log('Migration: adding user_id to profile table');
+    db.run('ALTER TABLE profile ADD COLUMN user_id INTEGER REFERENCES users(id)');
+  }
+}
+
+function migrateProjectsUserId(): void {
+  if (!hasColumn('projects', 'user_id')) {
+    console.log('Migration: adding user_id to projects table');
+    db.run('ALTER TABLE projects ADD COLUMN user_id INTEGER REFERENCES users(id)');
+  }
 }
 
 export function getDb(): SqlJsDatabase {
