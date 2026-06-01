@@ -49,61 +49,63 @@ const Navbar = () => {
   };
 
   return (
-    <nav className={styles.navbar}>
-      <NavLink to="/about" className={styles.logo} onClick={() => setMenuOpen(false)}>
-        My<span className={styles.logoAccent}>Blog</span>
-      </NavLink>
+    <>
+      <nav className={styles.navbar}>
+        <NavLink to="/about" className={styles.logo} onClick={() => setMenuOpen(false)}>
+          My<span className={styles.logoAccent}>Blog</span>
+        </NavLink>
 
-      <div className={styles.navLinks}>
-        {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              `${styles.navLink} ${isActive ? styles.navLinkActive : ''}`
-            }
-          >
-            <span className={styles.navLinkIcon}>
-              <item.icon size={16} />
-            </span>
-            {item.label}
-          </NavLink>
-        ))}
-      </div>
-
-      <div className={styles.navActions}>
-        <button className={styles.iconBtn} onClick={toggleTheme} title="切换主题">
-          {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-        </button>
-        
-        {isAuthenticated ? (
-          <>
-            <NavLink to="/settings" className={styles.iconBtn} title="设置">
-              <Settings size={18} />
+        <div className={styles.navLinks}>
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                `${styles.navLink} ${isActive ? styles.navLinkActive : ''}`
+              }
+            >
+              <span className={styles.navLinkIcon}>
+                <item.icon size={16} />
+              </span>
+              {item.label}
             </NavLink>
-            <div className={styles.userInfo}>
-              <span className={styles.userName}>{user?.display_name || user?.username}</span>
-              <button className={styles.iconBtn} onClick={handleLogout} title="退出登录">
-                <LogOut size={18} />
-              </button>
-            </div>
-          </>
-        ) : (
-          <NavLink to="/login" className={styles.loginBtn}>
-            <LogIn size={16} />
-            <span>登录</span>
-          </NavLink>
-        )}
+          ))}
+        </div>
 
-        <button
-          className={`${styles.hamburger} ${menuOpen ? styles.hamburgerOpen : ''}`}
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
-          <span className={styles.hamburgerLine}></span>
-          <span className={styles.hamburgerLine}></span>
-          <span className={styles.hamburgerLine}></span>
-        </button>
-      </div>
+        <div className={styles.navActions}>
+          <button className={styles.iconBtn} onClick={toggleTheme} title="切换主题">
+            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+          
+          {isAuthenticated ? (
+            <>
+              <NavLink to="/settings" className={styles.iconBtn} title="设置">
+                <Settings size={18} />
+              </NavLink>
+              <div className={styles.userInfo}>
+                <span className={styles.userName}>{user?.display_name || user?.username}</span>
+                <button className={styles.iconBtn} onClick={handleLogout} title="退出登录">
+                  <LogOut size={18} />
+                </button>
+              </div>
+            </>
+          ) : (
+            <NavLink to="/login" className={styles.loginBtn}>
+              <LogIn size={16} />
+              <span>登录</span>
+            </NavLink>
+          )}
+
+          <button
+            className={`${styles.hamburger} ${menuOpen ? styles.hamburgerOpen : ''}`}
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
+            <span className={styles.hamburgerLine}></span>
+            <span className={styles.hamburgerLine}></span>
+            <span className={styles.hamburgerLine}></span>
+          </button>
+        </div>
+      </nav>
 
       <div className={`${styles.mobileOverlay} ${menuOpen ? styles.open : ''}`}>
         <div className={styles.mobileNavLinks}>
@@ -159,7 +161,7 @@ const Navbar = () => {
           )}
         </div>
       </div>
-    </nav>
+    </>
   );
 };
 

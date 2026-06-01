@@ -130,15 +130,20 @@
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
+  overflow: hidden;
 }
 
 .socialLinkInput {
   flex: 1;
+  min-width: 0;
   padding: 6px 10px;
   background: transparent;
   border: none;
   color: var(--text-primary);
   font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .socialLinkInput::placeholder {
@@ -227,5 +232,20 @@
 
   .settingsPage {
     max-width: 100%;
+    gap: 24px;
+  }
+
+  .socialLinkItem {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .socialLinkInput {
+    width: 100%;
+    flex: none;
+  }
+
+  .socialLinkDivider {
+    display: none;
   }
 }

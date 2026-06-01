@@ -53,23 +53,39 @@ async function typedDelete<T>(url: string): Promise<T> {
   return api.delete(url) as Promise<T>;
 }
 
-export const getProjects = (params?: { tag?: string; page?: number; pageSize?: number }): Promise<PaginatedResponse<Project>> =>
-  typedGet('/projects', { params });
+function ensurePaginated<T>(res: unknown): PaginatedResponse<T> {
+  if (res && typeof res === 'object' && 'data' in res && Array.isArray((res as any).data)) {
+    return res as PaginatedResponse<T>;
+  }
+  if (Array.isArray(res)) {
+    return { data: res as T[], total: res.length, page: 1, pageSize: res.length };
+  }
+  return { data: [], total: 0, page: 1, pageSize: 20 };
+}
+
+export const getProjects = async (params?: { tag?: string; page?: number; pageSize?: number }): Promise<PaginatedResponse<Project>> => {
+  const res = await typedGet<unknown>('/projects', { params });
+  return ensurePaginated<Project>(res);
+};
 export const getMyProjects = (): Promise<Project[]> => typedGet('/projects/my');
 export const createProject = (data: Partial<Project>): Promise<Project> => typedPost('/projects', data);
 export const updateProject = (id: number, data: Partial<Project>): Promise<Project> => typedPut(`/projects/${id}`, data);
 export const deleteProject = (id: number): Promise<void> => typedDelete(`/projects/${id}`);
 
-export const getPosts = (params?: { tag?: string; sort?: string; search?: string; page?: number; pageSize?: number }): Promise<PaginatedResponse<Post>> =>
-  typedGet('/posts', { params });
+export const getPosts = async (params?: { tag?: string; sort?: string; search?: string; page?: number; pageSize?: number }): Promise<PaginatedResponse<Post>> => {
+  const res = await typedGet<unknown>('/posts', { params });
+  return ensurePaginated<Post>(res);
+};
 export const getPostById = (id: number): Promise<Post> => typedGet(`/posts/${id}`);
 export const createPost = (data: Partial<Post>): Promise<Post> => typedPost('/posts', data);
 export const likePost = (id: number): Promise<Post> => typedPost(`/posts/${id}/like`);
 export const createComment = (postId: number, data: Partial<Comment>): Promise<Comment> => typedPost(`/posts/${postId}/comments`, data);
 export const getComments = (postId: number): Promise<Comment[]> => typedGet(`/posts/${postId}/comments`);
 
-export const getResources = (params?: { category?: string; page?: number; pageSize?: number }): Promise<PaginatedResponse<Resource>> =>
-  typedGet('/resources', { params });
+export const getResources = async (params?: { category?: string; page?: number; pageSize?: number }): Promise<PaginatedResponse<Resource>> => {
+  const res = await typedGet<unknown>('/resources', { params });
+  return ensurePaginated<Resource>(res);
+};
 export const createResource = (data: Partial<Resource>): Promise<Resource> => typedPost('/resources', data);
 export const voteResource = (id: number): Promise<Resource> => typedPost(`/resources/${id}/vote`);
 
