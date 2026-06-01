@@ -5,10 +5,33 @@ import path from 'path';
 const dbPath = process.env.DB_PATH || path.join(__dirname, '..', 'database.sqlite');
 
 let db: SqlJsDatabase;
+let saveTimeout: NodeJS.Timeout | null = null;
+let isSaving = false;
 
 function saveDatabase(): void {
-  const data = db.export();
-  fs.writeFileSync(dbPath, Buffer.from(data));
+  if (isSaving) {
+    return;
+  }
+
+  if (saveTimeout) {
+    clearTimeout(saveTimeout);
+  }
+
+  saveTimeout = setTimeout(() => {
+    isSaving = true;
+    try {
+      const data = db.export();
+      fs.writeFile(dbPath, Buffer.from(data), (err) => {
+        if (err) {
+          console.error('Failed to save database:', err);
+        }
+        isSaving = false;
+      });
+    } catch (err) {
+      console.error('Failed to export database:', err);
+      isSaving = false;
+    }
+  }, 100);
 }
 
 export async function initDatabasePromise(): Promise<void> {
@@ -142,6 +165,11 @@ export function queryAll(sql: string, params: any[] = []): any[] {
 export function queryOne(sql: string, params: any[] = []): any | undefined {
   const results = queryAll(sql, params);
   return results[0];
+}
+
+export function queryCount(sql: string, params: any[] = []): number {
+  const result = queryOne(sql, params);
+  return result?.count || 0;
 }
 
 export function run(sql: string, params: any[] = []): { lastInsertRowid: number; changes: number } {

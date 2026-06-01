@@ -17,20 +17,6 @@ import styles from './Discussion.module.css';
 
 const filterTags = ['全部', '前端', '后端', '工具', '面试', 'Bug 排查'];
 
-const mockPosts: Post[] = [
-  { id: 1, title: 'React 18 新特性详解', content: '# React 18 新特性\n\nReact 18 引入了许多激动人心的新特性：\n\n## Automatic Batching\n\n自动批处理让多次 state 更新合并为一次渲染。\n\n## Suspense 改进\n\n服务端 Suspense 支持流式渲染。\n\n## useTransition\n\n```tsx\nconst [isPending, startTransition] = useTransition();\n```\n\n这些特性让 React 应用更加高效。', tags: '["前端","React"]', likes: 42, comment_count: 5, created_at: '2024-06-15' },
-  { id: 2, title: 'TypeScript 高级类型技巧', content: '# TypeScript 高级类型\n\n掌握这些类型技巧，让你的代码更安全。\n\n## 条件类型\n\n```typescript\ntype IsString<T> = T extends string ? true : false;\n```\n\n## 模板字面量类型\n\n```typescript\ntype EventName = `on${Capitalize<string>}`;\n```', tags: '["前端","TypeScript"]', likes: 38, comment_count: 3, created_at: '2024-06-10' },
-  { id: 3, title: 'Node.js 性能优化实践', content: '# Node.js 性能优化\n\n## 1. 使用 Cluster 模式\n\n## 2. 合理使用缓存\n\n## 3. 数据库查询优化\n\n## 4. 使用流处理大数据', tags: '["后端","Node"]', likes: 29, comment_count: 7, created_at: '2024-06-08' },
-  { id: 4, title: '前端工程化工具对比 2024', content: '# 前端工程化工具对比\n\n对比 Vite、Webpack、Turbopack、Rspack 等工具的优劣。', tags: '["工具","前端"]', likes: 56, comment_count: 12, created_at: '2024-06-05' },
-  { id: 5, title: '前端面试高频题解析', content: '# 前端面试题解析\n\n## 闭包原理\n\n## 事件循环机制\n\n## 虚拟 DOM diff 算法', tags: '["面试","前端"]', likes: 88, comment_count: 20, created_at: '2024-06-01' },
-];
-
-const mockComments: Comment[] = [
-  { id: 1, post_id: 1, author: 'Alice', content: '写得很好，学到了！', created_at: '2024-06-16' },
-  { id: 2, post_id: 1, author: 'Bob', content: 'useTransition 确实很实用，能显著提升用户体验。', created_at: '2024-06-17' },
-  { id: 3, post_id: 1, author: 'Charlie', content: '期待更多关于 React 18 的深入分析。', created_at: '2024-06-18' },
-];
-
 type SortMode = 'latest' | 'hottest';
 
 const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
@@ -87,11 +73,8 @@ const Discussion = () => {
 
   useEffect(() => {
     getPosts()
-      .then((data) => setPosts(data))
-      .catch(() => {
-        setPosts(mockPosts);
-        addToast('使用离线数据模式', 'info');
-      });
+      .then((res) => setPosts(res.data))
+      .catch(() => setPosts([]));
   }, []);
 
   const parseTags = (tags: any): string[] => {
@@ -150,7 +133,7 @@ const Discussion = () => {
       const cmts = await getComments(post.id);
       setComments(cmts);
     } catch {
-      setComments(mockComments.filter((c) => c.post_id === post.id));
+      setComments([]);
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };

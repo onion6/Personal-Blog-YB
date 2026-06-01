@@ -69,7 +69,7 @@ if (NODE_ENV === 'production' && fs.existsSync(STATIC_DIR)) {
 
 async function startServer() {
   await initDatabasePromise();
-  seedDatabase();
+  await seedDatabase();
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`[${NODE_ENV}] Server running on http://0.0.0.0:${PORT}`);

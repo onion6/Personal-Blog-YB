@@ -17,18 +17,6 @@ const categories = [
   { key: '实用网站', label: '实用网站', icon: Globe, emoji: '🌐' },
 ];
 
-const mockResources: Resource[] = [
-  { id: 1, name: 'VS Code', description: '最流行的代码编辑器，支持丰富的插件生态', url: 'https://code.visualstudio.com', category: '开发工具', icon_url: '', votes: 128, created_at: '2024-01-01' },
-  { id: 2, name: 'GitHub Copilot', description: 'AI 驱动的编程助手，提升编码效率', url: 'https://copilot.github.com', category: '开发工具', icon_url: '', votes: 96, created_at: '2024-01-02' },
-  { id: 3, name: 'Docker Desktop', description: '容器化开发环境，一键部署应用', url: 'https://docker.com', category: '开发工具', icon_url: '', votes: 85, created_at: '2024-01-03' },
-  { id: 4, name: 'MDN Web Docs', description: '最权威的 Web 技术文档', url: 'https://developer.mozilla.org', category: '学习资源', icon_url: '', votes: 200, created_at: '2024-02-01' },
-  { id: 5, name: 'freeCodeCamp', description: '免费学习编程的开源社区', url: 'https://freecodecamp.org', category: '学习资源', icon_url: '', votes: 180, created_at: '2024-02-02' },
-  { id: 6, name: 'Figma', description: '在线协作设计工具，支持组件化设计', url: 'https://figma.com', category: '设计素材', icon_url: '', votes: 150, created_at: '2024-03-01' },
-  { id: 7, name: 'Dribbble', description: '设计师社区，获取设计灵感', url: 'https://dribbble.com', category: '设计素材', icon_url: '', votes: 120, created_at: '2024-03-02' },
-  { id: 8, name: 'Can I Use', description: '浏览器兼容性查询工具', url: 'https://caniuse.com', category: '实用网站', icon_url: '', votes: 170, created_at: '2024-04-01' },
-  { id: 9, name: 'Carbon', description: '代码截图美化工具', url: 'https://carbon.now.sh', category: '实用网站', icon_url: '', votes: 95, created_at: '2024-04-02' },
-];
-
 const Resources = () => {
   const { addToast } = useToastStore();
   const { isAuthenticated } = useAuthStore();
@@ -58,11 +46,8 @@ const Resources = () => {
 
   useEffect(() => {
     getResources()
-      .then((data) => setResources(data))
-      .catch(() => {
-        setResources(mockResources);
-        addToast('使用离线数据模式', 'info');
-      });
+      .then((res) => setResources(res.data))
+      .catch(() => setResources([]));
   }, []);
 
   const parseCategories = (cat: any): string[] => {

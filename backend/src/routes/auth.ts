@@ -1,5 +1,6 @@
 import { Router, Response } from 'express';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { queryOne, run } from '../database';
 import { generateToken, AuthRequest, requireAuth } from '../middleware/auth';
 
@@ -122,7 +123,7 @@ router.get('/me', requireAuth, (req: AuthRequest, res: Response) => {
 
 router.post('/generate-invite-code', requireAuth, (req: AuthRequest, res: Response) => {
   try {
-    const code = Math.random().toString(36).substring(2, 10).toUpperCase();
+    const code = crypto.randomBytes(6).toString('hex').toUpperCase();
     
     run('INSERT INTO invite_codes (code, created_by) VALUES (?, ?)', 
       [code, req.user!.id]);

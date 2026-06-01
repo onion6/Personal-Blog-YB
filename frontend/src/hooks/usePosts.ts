@@ -5,7 +5,10 @@ import type { Post } from '../types';
 export const usePosts = () => {
   return useQuery<Post[]>({
     queryKey: ['posts'],
-    queryFn: getPosts,
+    queryFn: async () => {
+      const res = await getPosts();
+      return res.data;
+    },
   });
 };
 

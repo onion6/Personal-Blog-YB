@@ -5,7 +5,10 @@ import type { Resource } from '../types';
 export const useResources = () => {
   return useQuery<Resource[]>({
     queryKey: ['resources'],
-    queryFn: getResources,
+    queryFn: async () => {
+      const res = await getResources();
+      return res.data;
+    },
   });
 };
 

@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { queryAll, queryOne, run } from '../database';
+import { queryAll, queryOne, queryCount, run } from '../database';
 import { writeLimiter, voteLimiter } from '../middleware';
 import { validateBody, validateIdParam, createPostSchema, createCommentSchema } from '../validate';
 import { requireAuth, AuthRequest } from '../middleware/auth';
@@ -7,8 +7,12 @@ import { requireAuth, AuthRequest } from '../middleware/auth';
 const router = Router();
 
 router.get('/', (req: Request, res: Response) => {
-  const { tag, sort, search } = req.query;
-  let query = `
+  const { tag, sort, search, page, pageSize } = req.query;
+  const pageNum = Math.max(1, Number(page) || 1);
+  const size = Math.min(100, Math.max(1, Number(pageSize) || 20));
+  const offset = (pageNum - 1) * size;
+
+  let baseQuery = `
     SELECT posts.*, 
       (SELECT COUNT(*) FROM comments WHERE comments.post_id = posts.id) as comment_count
     FROM posts
@@ -26,18 +30,20 @@ router.get('/', (req: Request, res: Response) => {
     params.push(`%${search}%`, `%${search}%`);
   }
 
+  let whereClause = '';
   if (conditions.length > 0) {
-    query += ' WHERE ' + conditions.join(' AND ');
+    whereClause = ' WHERE ' + conditions.join(' AND ');
   }
 
-  if (sort === 'hot') {
-    query += ' ORDER BY posts.likes DESC';
-  } else {
-    query += ' ORDER BY posts.created_at DESC';
-  }
+  const total = queryCount(
+    `SELECT COUNT(*) as count FROM posts${whereClause}`,
+    params
+  );
 
-  const posts = queryAll(query, params);
-  res.json(posts);
+  const orderClause = sort === 'hot' ? ' ORDER BY posts.likes DESC' : ' ORDER BY posts.created_at DESC';
+  const posts = queryAll(`${baseQuery}${whereClause}${orderClause} LIMIT ? OFFSET ?`, [...params, size, offset]);
+
+  res.json({ data: posts, total, page: pageNum, pageSize: size });
 });
 
 router.get('/:id', validateIdParam, (req: Request, res: Response) => {

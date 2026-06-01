@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { queryAll, queryOne, run } from '../database';
+import { queryAll, queryOne, queryCount, run } from '../database';
 import { writeLimiter, voteLimiter } from '../middleware';
 import { validateBody, validateIdParam, createResourceSchema } from '../validate';
 import { requireAuth } from '../middleware/auth';
@@ -7,26 +7,39 @@ import { requireAuth } from '../middleware/auth';
 const router = Router();
 
 router.get('/', (req: Request, res: Response) => {
-  const { category } = req.query;
-  let resources;
+  const { category, page, pageSize } = req.query;
+  const pageNum = Math.max(1, Number(page) || 1);
+  const size = Math.min(100, Math.max(1, Number(pageSize) || 20));
+  const offset = (pageNum - 1) * size;
+
+  let whereClause = '';
+  const params: any[] = [];
 
   if (category) {
-    resources = queryAll('SELECT * FROM resources WHERE category = ? ORDER BY votes DESC', [category as string]);
-  } else {
-    resources = queryAll('SELECT * FROM resources ORDER BY votes DESC');
+    whereClause = ' WHERE category = ?';
+    params.push(category as string);
   }
 
-  res.json(resources);
+  const total = queryCount(
+    `SELECT COUNT(*) as count FROM resources${whereClause}`,
+    params
+  );
+
+  const resources = queryAll(
+    `SELECT * FROM resources${whereClause} ORDER BY votes DESC LIMIT ? OFFSET ?`,
+    [...params, size, offset]
+  );
+
+  res.json({ data: resources, total, page: pageNum, pageSize: size });
 });
 
 router.post('/', requireAuth, writeLimiter, validateBody(createResourceSchema), (req: Request, res: Response) => {
   const { name, description, url, category, icon_url } = req.body;
-  // 支持多分类，如果是数组则序列化为 JSON 字符串
   const categoryStr = Array.isArray(category) ? JSON.stringify(category) : category;
   
   const result = run(
     'INSERT INTO resources (name, description, url, category, icon_url) VALUES (?, ?, ?, ?, ?)',
-    [name, description, url, categoryStr, icon_url]
+    [name, description, url, categoryStr, icon_url || '']
   );
 
   res.json({ id: result.lastInsertRowid, ...req.body, votes: 0 });

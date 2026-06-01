@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { User, FolderKanban, MessageCircle, BookOpen, Settings, Sun, Moon, Menu, X, LogIn, LogOut } from 'lucide-react';
 import { useThemeStore } from '../../store/useThemeStore';
 import { useAuthStore } from '../../store/useAuthStore';
+import { getCurrentUser } from '../../api';
 import styles from './Navbar.module.css';
 
 const navItems = [
@@ -14,13 +15,21 @@ const navItems = [
 
 const Navbar = () => {
   const { theme, toggleTheme } = useThemeStore();
-  const { isAuthenticated, user, logout } = useAuthStore();
+  const { isAuthenticated, user, logout, updateUser } = useAuthStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
+    if (isAuthenticated) {
+      getCurrentUser()
+        .then((data) => {
+          if (data?.user) {
+            updateUser(data.user);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [isAuthenticated, updateUser]);
 
   useEffect(() => {
     if (menuOpen) {
