@@ -214,3 +214,16 @@ export function run(sql: string, params: any[] = []): { lastInsertRowid: number;
   saveDatabase();
   return { lastInsertRowid: lastId, changes };
 }
+
+export function withTransaction<T>(fn: () => T): T {
+  db.run('BEGIN TRANSACTION');
+  try {
+    const result = fn();
+    db.run('COMMIT');
+    saveDatabase();
+    return result;
+  } catch (err) {
+    db.run('ROLLBACK');
+    throw err;
+  }
+}

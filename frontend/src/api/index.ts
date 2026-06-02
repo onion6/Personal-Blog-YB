@@ -23,10 +23,13 @@ export function setGlobalErrorHandler(handler: (message: string) => void) {
   globalErrorHandler = handler;
 }
 
+let isRedirectingToLogin = false;
+
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && !isRedirectingToLogin) {
+      isRedirectingToLogin = true;
       localStorage.removeItem('auth_token');
       localStorage.removeItem('auth_user');
       window.location.href = '/login';

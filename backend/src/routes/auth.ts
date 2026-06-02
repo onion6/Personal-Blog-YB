@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import { queryOne, queryAll, run } from '../database';
+import { queryOne, queryAll, run, withTransaction } from '../database';
 import { generateToken, AuthRequest, requireAuth, requireAdmin } from '../middleware/auth';
 
 const router = Router();
@@ -37,17 +37,23 @@ router.post('/register', async (req: AuthRequest, res: Response) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    
-    const result = run(
-      'INSERT INTO users (username, password, display_name) VALUES (?, ?, ?)',
-      [username, hashedPassword, display_name || username]
-    );
 
-    run('UPDATE invite_codes SET is_used = 1, used_by = ? WHERE id = ?', 
-      [result.lastInsertRowid, codeRecord.id]);
+    const displayNameValue = display_name || username;
 
-    run('INSERT INTO profile (user_id, name) VALUES (?, ?)', 
-      [result.lastInsertRowid, display_name || username]);
+    const result = withTransaction(() => {
+      const userResult = run(
+        'INSERT INTO users (username, password, display_name) VALUES (?, ?, ?)',
+        [username, hashedPassword, displayNameValue]
+      );
+
+      run('UPDATE invite_codes SET is_used = 1, used_by = ? WHERE id = ?', 
+        [userResult.lastInsertRowid, codeRecord.id]);
+
+      run('INSERT INTO profile (user_id, name) VALUES (?, ?)', 
+        [userResult.lastInsertRowid, displayNameValue]);
+
+      return userResult;
+    });
 
     const token = generateToken({ id: result.lastInsertRowid, username });
 
@@ -56,7 +62,7 @@ router.post('/register', async (req: AuthRequest, res: Response) => {
       user: {
         id: result.lastInsertRowid,
         username,
-        display_name: display_name || username
+        display_name: displayNameValue
       }
     });
   } catch (err) {
