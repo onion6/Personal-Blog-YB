@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { User, FolderKanban, MessageCircle, BookOpen, Settings, Sun, Moon, Menu, X, LogIn, LogOut, Key } from 'lucide-react';
+import { User, FolderKanban, MessageCircle, BookOpen, Settings, Sun, Moon, Menu, X, LogIn, LogOut, Key, Users } from 'lucide-react';
 import { useThemeStore } from '../../store/useThemeStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import { getCurrentUser } from '../../api';
@@ -12,6 +12,7 @@ const navItems = [
   { to: '/projects', label: '项目展示', icon: FolderKanban },
   { to: '/discussion', label: '技术交流', icon: MessageCircle },
   { to: '/resources', label: '资源分享', icon: BookOpen },
+  { to: '/users', label: '社区成员', icon: Users },
 ];
 
 const Navbar = () => {

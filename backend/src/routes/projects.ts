@@ -1,12 +1,12 @@
 import { Router, Response } from 'express';
 import { queryAll, queryOne, queryCount, run } from '../database';
-import { writeLimiter } from '../middleware';
+import { writeLimiter, asyncHandler } from '../middleware';
 import { validateBody, validateIdParam, createProjectSchema, updateProjectSchema } from '../validate';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
-router.get('/', (req: AuthRequest, res: Response) => {
+router.get('/', asyncHandler(async (req: AuthRequest, res: Response) => {
   const { tag, page, pageSize } = req.query;
   const pageNum = Math.max(1, Number(page) || 1);
   const size = Math.min(100, Math.max(1, Number(pageSize) || 20));
@@ -20,43 +20,43 @@ router.get('/', (req: AuthRequest, res: Response) => {
     params.push(`%${tag}%`);
   }
 
-  const total = queryCount(
+  const total = await queryCount(
     `SELECT COUNT(*) as count FROM projects p${whereClause}`,
     params
   );
 
-  const projects = queryAll(
+  const projects = await queryAll(
     `SELECT p.*, u.display_name as author_name FROM projects p LEFT JOIN users u ON p.user_id = u.id${whereClause} ORDER BY p.sort_order ASC LIMIT ? OFFSET ?`,
     [...params, size, offset]
   );
 
   res.json({ data: projects, total, page: pageNum, pageSize: size });
-});
+}));
 
-router.get('/my', requireAuth, (req: AuthRequest, res: Response) => {
-  const projects = queryAll(
+router.get('/my', requireAuth, asyncHandler(async (req: AuthRequest, res: Response) => {
+  const projects = await queryAll(
     'SELECT * FROM projects WHERE user_id = ? ORDER BY sort_order ASC',
     [req.user!.id]
   );
   res.json(projects);
-});
+}));
 
-router.post('/', requireAuth, writeLimiter, validateBody(createProjectSchema), (req: AuthRequest, res: Response) => {
+router.post('/', requireAuth, writeLimiter, validateBody(createProjectSchema), asyncHandler(async (req: AuthRequest, res: Response) => {
   const { name, description, cover_url, tech_stack, github_url, demo_url, status, sort_order } = req.body;
   const techStackStr = typeof tech_stack === 'string' ? tech_stack : JSON.stringify(tech_stack || []);
-  
-  const result = run(
+
+  const result = await run(
     'INSERT INTO projects (user_id, name, description, cover_url, tech_stack, github_url, demo_url, status, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
     [req.user!.id, name, description, cover_url, techStackStr, github_url, demo_url, status || '进行中', sort_order || 0]
   );
 
   res.json({ id: result.lastInsertRowid, ...req.body });
-});
+}));
 
-router.put('/:id', requireAuth, validateIdParam, validateBody(updateProjectSchema), (req: AuthRequest, res: Response) => {
+router.put('/:id', requireAuth, validateIdParam, validateBody(updateProjectSchema), asyncHandler(async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
-  const project = queryOne('SELECT * FROM projects WHERE id = ?', [Number(id)]);
-  
+  const project = await queryOne('SELECT * FROM projects WHERE id = ?', [Number(id)]);
+
   if (!project) {
     res.status(404).json({ error: '项目不存在' });
     return;
@@ -70,18 +70,18 @@ router.put('/:id', requireAuth, validateIdParam, validateBody(updateProjectSchem
   const { name, description, cover_url, tech_stack, github_url, demo_url, status, sort_order } = req.body;
   const techStackStr = typeof tech_stack === 'string' ? tech_stack : JSON.stringify(tech_stack || []);
 
-  run(
+  await run(
     'UPDATE projects SET name = ?, description = ?, cover_url = ?, tech_stack = ?, github_url = ?, demo_url = ?, status = ?, sort_order = ? WHERE id = ?',
     [name, description, cover_url, techStackStr, github_url, demo_url, status, sort_order, Number(id)]
   );
 
   res.json({ id: Number(id), ...req.body });
-});
+}));
 
-router.delete('/:id', requireAuth, validateIdParam, (req: AuthRequest, res: Response) => {
+router.delete('/:id', requireAuth, validateIdParam, asyncHandler(async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
-  const project = queryOne('SELECT * FROM projects WHERE id = ?', [Number(id)]);
-  
+  const project = await queryOne('SELECT * FROM projects WHERE id = ?', [Number(id)]);
+
   if (!project) {
     res.status(404).json({ error: '项目不存在' });
     return;
@@ -92,8 +92,8 @@ router.delete('/:id', requireAuth, validateIdParam, (req: AuthRequest, res: Resp
     return;
   }
 
-  run('DELETE FROM projects WHERE id = ?', [Number(id)]);
+  await run('DELETE FROM projects WHERE id = ?', [Number(id)]);
   res.json({ message: '项目已删除' });
-});
+}));
 
 export default router;

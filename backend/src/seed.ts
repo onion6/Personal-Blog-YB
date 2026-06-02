@@ -2,41 +2,41 @@ import { queryOne, run } from './database';
 import bcrypt from 'bcryptjs';
 
 export async function seedDatabase(): Promise<void> {
-  seedInviteCodes();
+  await seedInviteCodes();
   const userId = await seedAdminUser();
   if (userId) {
-    seedProjects(userId);
-    seedPosts();
-    seedResources();
+    await seedProjects(userId);
+    await seedPosts(userId);
+    await seedResources();
   }
 }
 
-function seedInviteCodes(): void {
-  const codeCount = queryOne('SELECT COUNT(*) as count FROM invite_codes')?.count || 0;
+async function seedInviteCodes(): Promise<void> {
+  const codeCount = (await queryOne('SELECT COUNT(*) as count FROM invite_codes'))?.count || 0;
   if (codeCount > 0) return;
 
   const defaultCodes = ['WELCOME2024', 'ADMIN001', 'TEST123'];
   for (const code of defaultCodes) {
-    run('INSERT INTO invite_codes (code) VALUES (?)', [code]);
+    await run('INSERT INTO invite_codes (code) VALUES (?)', [code]);
   }
   console.log('Default invite codes created:', defaultCodes);
 }
 
 async function seedAdminUser(): Promise<number | null> {
-  const userCount = queryOne('SELECT COUNT(*) as count FROM users')?.count || 0;
+  const userCount = (await queryOne('SELECT COUNT(*) as count FROM users'))?.count || 0;
   if (userCount > 0) {
-    const existing = queryOne('SELECT id FROM users LIMIT 1');
+    const existing = await queryOne('SELECT id FROM users LIMIT 1');
     return existing?.id || null;
   }
 
   const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
   const hashedPassword = await bcrypt.hash(adminPassword, 10);
-  const result = run(
+  const result = await run(
     'INSERT INTO users (username, password, display_name) VALUES (?, ?, ?)',
     ['admin', hashedPassword, '杨聪']
   );
 
-  run(
+  await run(
     `INSERT INTO profile (user_id, name, title, bio, avatar_url, skills, timeline, hobbies, contacts)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
@@ -74,8 +74,10 @@ async function seedAdminUser(): Promise<number | null> {
     ]
   );
 
-  run('UPDATE invite_codes SET is_used = 1, used_by = ? WHERE code = ?',
+  await run('UPDATE invite_codes SET is_used = 1, used_by = ? WHERE code = ?',
     [result.lastInsertRowid, 'ADMIN001']);
+
+  await run("UPDATE users SET role = 'admin' WHERE id = ?", [result.lastInsertRowid]);
 
   if (process.env.ADMIN_PASSWORD) {
     console.log('Admin user created with custom password from ADMIN_PASSWORD env var.');
@@ -86,16 +88,16 @@ async function seedAdminUser(): Promise<number | null> {
   return result.lastInsertRowid;
 }
 
-function seedProjects(userId: number): void {
-  const count = queryOne('SELECT COUNT(*) as count FROM projects')?.count || 0;
+async function seedProjects(userId: number): Promise<void> {
+  const count = (await queryOne('SELECT COUNT(*) as count FROM projects'))?.count || 0;
   if (count > 0) return;
 
   const projects = [
     {
       name: 'Personal-Blog-YB',
-      description: '基于 React + Express + SQLite 的全栈个人博客系统，支持暗色/亮色主题切换、Markdown 文章发布、项目展示、资源分享等功能。采用前后端分离架构，支持 Docker 部署。',
+      description: '基于 React + Express + MySQL 的全栈个人博客系统，支持暗色/亮色主题切换、Markdown 文章发布、项目展示、资源分享等功能。采用前后端分离架构，支持 Docker 部署。',
       cover_url: '',
-      tech_stack: JSON.stringify(['React', 'TypeScript', 'Express', 'SQLite', 'Docker']),
+      tech_stack: JSON.stringify(['React', 'TypeScript', 'Express', 'MySQL', 'Docker']),
       github_url: 'https://github.com/yangcong/personal-blog',
       demo_url: '/',
       status: '已完成',
@@ -124,7 +126,7 @@ function seedProjects(userId: number): void {
   ];
 
   for (const p of projects) {
-    run(
+    await run(
       'INSERT INTO projects (user_id, name, description, cover_url, tech_stack, github_url, demo_url, status, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [userId, p.name, p.description, p.cover_url, p.tech_stack, p.github_url, p.demo_url, p.status, p.sort_order]
     );
@@ -132,8 +134,8 @@ function seedProjects(userId: number): void {
   console.log('Seed projects created:', projects.length);
 }
 
-function seedPosts(): void {
-  const count = queryOne('SELECT COUNT(*) as count FROM posts')?.count || 0;
+async function seedPosts(userId: number): Promise<void> {
+  const count = (await queryOne('SELECT COUNT(*) as count FROM posts'))?.count || 0;
   if (count > 0) return;
 
   const posts = [
@@ -158,14 +160,14 @@ function seedPosts(): void {
   ];
 
   for (const p of posts) {
-    run('INSERT INTO posts (title, content, tags, likes) VALUES (?, ?, ?, ?)',
-      [p.title, p.content, p.tags, p.likes]);
+    await run('INSERT INTO posts (user_id, title, content, tags, likes) VALUES (?, ?, ?, ?, ?)',
+      [userId, p.title, p.content, p.tags, p.likes]);
   }
   console.log('Seed posts created:', posts.length);
 }
 
-function seedResources(): void {
-  const count = queryOne('SELECT COUNT(*) as count FROM resources')?.count || 0;
+async function seedResources(): Promise<void> {
+  const count = (await queryOne('SELECT COUNT(*) as count FROM resources'))?.count || 0;
   if (count > 0) return;
 
   const resources = [
@@ -178,7 +180,7 @@ function seedResources(): void {
   ];
 
   for (const r of resources) {
-    run('INSERT INTO resources (name, description, url, category, icon_url, votes) VALUES (?, ?, ?, ?, ?, ?)',
+    await run('INSERT INTO resources (name, description, url, category, icon_url, votes) VALUES (?, ?, ?, ?, ?, ?)',
       [r.name, r.description, r.url, r.category, r.icon_url, r.votes]);
   }
   console.log('Seed resources created:', resources.length);

@@ -1,0 +1,168 @@
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, User, Briefcase, Clock, Heart, Mail, Code, GraduationCap } from 'lucide-react';
+import { getUserProfile, type UserProfile as UserProfileType } from '../../api';
+import styles from './UserProfile.module.css';
+
+const UserProfile = () => {
+  const { userId } = useParams<{ userId: string }>();
+  const navigate = useNavigate();
+  const [profile, setProfile] = useState<UserProfileType | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (userId) {
+      fetchProfile(Number(userId));
+    }
+  }, [userId]);
+
+  const fetchProfile = async (id: number) => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await getUserProfile(id);
+      setProfile(data);
+    } catch (err: any) {
+      setError(err.response?.data?.error || '加载失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getInitial = (name: string) => {
+    return name?.charAt(0)?.toUpperCase() || 'U';
+  };
+
+  if (loading) {
+    return (
+      <div className={styles.profilePage}>
+        <div className={styles.loading}>
+          <div className={styles.spinner} />
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !profile) {
+    return (
+      <div className={styles.profilePage}>
+        <div className={styles.errorState}>
+          <div className={styles.errorIcon}>😕</div>
+          <h2>用户不存在</h2>
+          <p>{error || '找不到该用户的信息'}</p>
+          <button className={styles.backButton} onClick={() => navigate('/users')}>
+            返回用户列表
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.profilePage}>
+      <button className={styles.backButton} onClick={() => navigate('/users')}>
+        <ArrowLeft size={18} />
+        返回用户列表
+      </button>
+
+      <div className={styles.profileHeader}>
+        {profile.avatar_url ? (
+          <img src={profile.avatar_url} alt={profile.name} className={styles.avatar} />
+        ) : (
+          <div className={styles.avatarPlaceholder}>
+            {getInitial(profile.name)}
+          </div>
+        )}
+        <h1 className={styles.profileName}>{profile.display_name || profile.name}</h1>
+        {profile.title && <p className={styles.profileTitle}>{profile.title}</p>}
+        {profile.bio && <p className={styles.profileBio}>{profile.bio}</p>}
+      </div>
+
+      {profile.skills && profile.skills.length > 0 && (
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>
+            <Code size={24} className={styles.sectionIcon} />
+            技能特长
+          </h2>
+          <div className={styles.skillsGrid}>
+            {profile.skills.map((skill, index) => (
+              <div key={index} className={styles.skillItem}>
+                <div className={styles.skillHeader}>
+                  <span className={styles.skillLabel}>{skill.label}</span>
+                  <span className={styles.skillValue}>{skill.value}%</span>
+                </div>
+                <div className={styles.skillBar}>
+                  <div
+                    className={styles.skillProgress}
+                    style={{ width: `${skill.value}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {profile.timeline && profile.timeline.length > 0 && (
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>
+            <GraduationCap size={24} className={styles.sectionIcon} />
+            成长经历
+          </h2>
+          <div className={styles.timeline}>
+            {profile.timeline.map((item, index) => (
+              <div key={index} className={styles.timelineItem}>
+                <div className={styles.timelineDate}>{item.date}</div>
+                <h3 className={styles.timelineTitle}>{item.title}</h3>
+                <p className={styles.timelineDesc}>{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {profile.hobbies && profile.hobbies.length > 0 && (
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>
+            <Heart size={24} className={styles.sectionIcon} />
+            兴趣爱好
+          </h2>
+          <div className={styles.hobbiesGrid}>
+            {profile.hobbies.map((hobby, index) => (
+              <div key={index} className={styles.hobbyItem}>
+                <span className={styles.hobbyIcon}>{hobby.icon}</span>
+                <span className={styles.hobbyName}>{hobby.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {profile.contacts && profile.contacts.length > 0 && (
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>
+            <Mail size={24} className={styles.sectionIcon} />
+            联系方式
+          </h2>
+          <div className={styles.contactsGrid}>
+            {profile.contacts.map((contact, index) => (
+              <a
+                key={index}
+                href={contact.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.contactItem}
+              >
+                <span className={styles.contactIcon}>{contact.icon}</span>
+                <span className={styles.contactName}>{contact.name}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default UserProfile;

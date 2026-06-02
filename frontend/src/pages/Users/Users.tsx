@@ -1,0 +1,148 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Users as UsersIcon, Search, FileText, FolderKanban } from 'lucide-react';
+import { getUsers, type UserListItem } from '../../api';
+import styles from './Users.module.css';
+
+const Users = () => {
+  const navigate = useNavigate();
+  const [users, setUsers] = useState<UserListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const pageSize = 12;
+
+  useEffect(() => {
+    fetchUsers();
+  }, [page, searchQuery]);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const res = await getUsers({ page, pageSize, search: searchQuery || undefined });
+      setUsers(res.data);
+      setTotal(res.total);
+    } catch {
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setPage(1);
+  };
+
+  const handleUserClick = (userId: number) => {
+    navigate(`/users/${userId}`);
+  };
+
+  const totalPages = Math.ceil(total / pageSize);
+
+  const getInitial = (name: string) => {
+    return name?.charAt(0)?.toUpperCase() || 'U';
+  };
+
+  return (
+    <div className={styles.usersPage}>
+      <div className={styles.pageHeader}>
+        <h1 className={styles.pageTitle}>
+          <UsersIcon size={32} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.5rem' }} />
+          社区成员
+        </h1>
+        <p className={styles.pageSubtitle}>发现优秀的开发者，学习他们的经验</p>
+      </div>
+
+      <div className={styles.searchBar}>
+        <input
+          type="text"
+          className={styles.searchInput}
+          placeholder="搜索用户..."
+          value={searchQuery}
+          onChange={handleSearch}
+        />
+      </div>
+
+      {loading ? (
+        <div className={styles.loading}>
+          <div className={styles.spinner} />
+        </div>
+      ) : users.length === 0 ? (
+        <div className={styles.emptyState}>
+          <div className={styles.emptyIcon}>
+            <UsersIcon size={64} />
+          </div>
+          <p className={styles.emptyText}>暂无用户</p>
+        </div>
+      ) : (
+        <>
+          <div className={styles.usersGrid}>
+            {users.map((user) => (
+              <div
+                key={user.id}
+                className={styles.userCard}
+                onClick={() => handleUserClick(user.id)}
+              >
+                {user.avatar_url ? (
+                  <img src={user.avatar_url} alt={user.name} className={styles.avatar} />
+                ) : (
+                  <div className={styles.avatarPlaceholder}>
+                    {getInitial(user.name)}
+                  </div>
+                )}
+                <h3 className={styles.userName}>{user.display_name || user.name}</h3>
+                {user.title && <p className={styles.userTitle}>{user.title}</p>}
+                {user.bio && <p className={styles.userBio}>{user.bio}</p>}
+                <div className={styles.userStats}>
+                  <div className={styles.statItem}>
+                    <span className={styles.statValue}>{user.post_count}</span>
+                    <span className={styles.statLabel}>文章</span>
+                  </div>
+                  <div className={styles.statItem}>
+                    <span className={styles.statValue}>{user.project_count}</span>
+                    <span className={styles.statLabel}>项目</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div className={styles.pagination}>
+              <button
+                className={styles.pageButton}
+                disabled={page === 1}
+                onClick={() => setPage(p => p - 1)}
+              >
+                上一页
+              </button>
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const pageNum = i + 1;
+                return (
+                  <button
+                    key={pageNum}
+                    className={`${styles.pageButton} ${page === pageNum ? styles.pageButtonActive : ''}`}
+                    onClick={() => setPage(pageNum)}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+              <button
+                className={styles.pageButton}
+                disabled={page === totalPages}
+                onClick={() => setPage(p => p + 1)}
+              >
+                下一页
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
+
+export default Users;

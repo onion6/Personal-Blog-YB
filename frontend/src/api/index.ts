@@ -117,4 +117,75 @@ export interface InviteCodeInfo {
 export const getInviteCodes = (): Promise<{ total: number; used: number; unused: number; list: InviteCodeInfo[] }> =>
   typedGet('/auth/invite-codes');
 
+export interface UserProfile {
+  id: number;
+  user_id: number;
+  username: string;
+  display_name: string;
+  name: string;
+  title: string;
+  bio: string;
+  avatar_url: string;
+  skills: { label: string; value: number }[];
+  timeline: { date: string; title: string; desc: string }[];
+  hobbies: { name: string; icon: string }[];
+  contacts: { name: string; icon: string; url: string }[];
+  created_at: string;
+}
+
+export interface UserListItem {
+  id: number;
+  username: string;
+  display_name: string;
+  name: string;
+  title: string;
+  bio: string;
+  avatar_url: string;
+  post_count: number;
+  project_count: number;
+  created_at: string;
+}
+
+export const getUserProfile = (userId: number): Promise<UserProfile> => typedGet(`/profile/user/${userId}`);
+
+export const getUsers = async (params?: { page?: number; pageSize?: number; search?: string }): Promise<PaginatedResponse<UserListItem>> => {
+  const res = await typedGet<unknown>('/profile/users', { params });
+  return ensurePaginated<UserListItem>(res);
+};
+
+export interface AdminStats {
+  stats: {
+    users: number;
+    posts: number;
+    projects: number;
+    resources: number;
+    comments: number;
+  };
+  recentUsers: { id: number; username: string; display_name: string; created_at: string }[];
+  recentPosts: { id: number; title: string; created_at: string }[];
+}
+
+export const getAdminStats = (): Promise<AdminStats> => typedGet('/admin/stats');
+export const getAdminUsers = async (params?: { page?: number; pageSize?: number; search?: string }): Promise<PaginatedResponse<any>> => {
+  const res = await typedGet<unknown>('/admin/users', { params });
+  return ensurePaginated<any>(res);
+};
+export const updateUserRole = (id: number, role: string): Promise<void> => typedPut(`/admin/users/${id}/role`, { role });
+export const deleteAdminUser = (id: number): Promise<void> => typedDelete(`/admin/users/${id}`);
+export const getAdminPosts = async (params?: { page?: number; pageSize?: number; search?: string }): Promise<PaginatedResponse<any>> => {
+  const res = await typedGet<unknown>('/admin/posts', { params });
+  return ensurePaginated<any>(res);
+};
+export const deleteAdminPost = (id: number): Promise<void> => typedDelete(`/admin/posts/${id}`);
+export const getAdminProjects = async (params?: { page?: number; pageSize?: number; search?: string }): Promise<PaginatedResponse<any>> => {
+  const res = await typedGet<unknown>('/admin/projects', { params });
+  return ensurePaginated<any>(res);
+};
+export const deleteAdminProject = (id: number): Promise<void> => typedDelete(`/admin/projects/${id}`);
+export const getAdminResources = async (params?: { page?: number; pageSize?: number; search?: string }): Promise<PaginatedResponse<any>> => {
+  const res = await typedGet<unknown>('/admin/resources', { params });
+  return ensurePaginated<any>(res);
+};
+export const deleteAdminResource = (id: number): Promise<void> => typedDelete(`/admin/resources/${id}`);
+
 export default api;

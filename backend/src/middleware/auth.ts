@@ -28,14 +28,14 @@ export function verifyToken(token: string): { id: number; username: string } {
 
 export function requireAuth(req: AuthRequest, res: Response, next: NextFunction): void {
   const authHeader = req.headers.authorization;
-  
+
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     res.status(401).json({ error: '未登录，请先登录' });
     return;
   }
 
   const token = authHeader.split(' ')[1];
-  
+
   try {
     const decoded = verifyToken(token);
     req.user = decoded;
@@ -46,14 +46,19 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
 }
 
 export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction): void {
-  requireAuth(req, res, () => {
+  requireAuth(req, res, async () => {
     if (!req.user) return;
-    const { queryOne } = require('../database');
-    const user = queryOne('SELECT role FROM users WHERE id = ?', [req.user.id]);
-    if (!user || user.role !== 'admin') {
-      res.status(403).json({ error: '需要管理员权限' });
-      return;
+    try {
+      const { queryOne } = require('../database');
+      const user = await queryOne('SELECT role FROM users WHERE id = ?', [req.user.id]);
+      if (!user || user.role !== 'admin') {
+        res.status(403).json({ error: '需要管理员权限' });
+        return;
+      }
+      next();
+    } catch (err) {
+      console.error('Admin check failed:', err);
+      res.status(500).json({ error: '服务器内部错误' });
     }
-    next();
   });
 }

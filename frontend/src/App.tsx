@@ -16,6 +16,8 @@ const Resources = lazy(() => import('./pages/Resources/Resources'));
 const Settings = lazy(() => import('./pages/Settings/Settings'));
 const Login = lazy(() => import('./pages/Login/Login'));
 const Register = lazy(() => import('./pages/Register/Register'));
+const Users = lazy(() => import('./pages/Users/Users'));
+const UserProfile = lazy(() => import('./pages/UserProfile/UserProfile'));
 
 const fontSizeMap = { small: '14px', medium: '16px', large: '18px' };
 
@@ -90,6 +92,8 @@ const App = () => {
             <Route path="/projects" element={<Projects />} />
             <Route path="/discussion" element={<Discussion />} />
             <Route path="/resources" element={<Resources />} />
+            <Route path="/users" element={<Users />} />
+            <Route path="/users/:userId" element={<UserProfile />} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           </Routes>
         </Suspense>

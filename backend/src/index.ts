@@ -1,10 +1,10 @@
 import 'dotenv/config';
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import path from 'path';
 import fs from 'fs';
-import { initDatabasePromise } from './database';
+import { initDatabasePromise, closeDatabase } from './database';
 import { seedDatabase } from './seed';
 import { globalLimiter } from './middleware';
 import authRouter from './routes/auth';
@@ -13,6 +13,7 @@ import postsRouter from './routes/posts';
 import resourcesRouter from './routes/resources';
 import settingsRouter from './routes/settings';
 import profileRouter from './routes/profile';
+import adminRouter from './routes/admin';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3001;
@@ -35,7 +36,15 @@ app.use(helmet({
       styleSrc: ["'self'", "https:", "'unsafe-inline'"],
       upgradeInsecureRequests: null,
     }
-  } : false,
+  } : {
+    directives: {
+      defaultSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "data:", "blob:"],
+      connectSrc: ["'self'", "http://localhost:*", "ws://localhost:*"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "blob:"],
+    }
+  },
   crossOriginEmbedderPolicy: false,
   crossOriginOpenerPolicy: false,
   crossOriginResourcePolicy: false,
@@ -49,8 +58,17 @@ app.use(cors({
 app.use(express.json({ limit: '1mb' }));
 app.use(globalLimiter);
 
-app.get('/api/health', (_req, res) => {
+app.get('/api/health', (_req: Request, res: Response) => {
   res.json({ status: 'ok', env: NODE_ENV, uptime: process.uptime() });
+});
+
+app.get('/', (_req: Request, res: Response) => {
+  res.json({
+    message: 'Personal Website API Server',
+    version: '1.0.0',
+    docs: '/api/health',
+    frontend: 'http://localhost:5173'
+  });
 });
 
 app.use('/api/auth', authRouter);
@@ -59,13 +77,21 @@ app.use('/api/posts', postsRouter);
 app.use('/api/resources', resourcesRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/profile', profileRouter);
+app.use('/api/admin', adminRouter);
 
 if (NODE_ENV === 'production' && fs.existsSync(STATIC_DIR)) {
   app.use(express.static(STATIC_DIR));
-  app.get('*', (_req, res) => {
+  app.get('*', (_req: Request, res: Response) => {
     res.sendFile(path.join(STATIC_DIR, 'index.html'));
   });
 }
+
+app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  console.error('Unhandled error:', err);
+  if (!res.headersSent) {
+    res.status(500).json({ error: '服务器内部错误' });
+  }
+});
 
 async function startServer() {
   await initDatabasePromise();
@@ -77,5 +103,17 @@ async function startServer() {
 }
 
 startServer().catch(console.error);
+
+process.on('SIGINT', async () => {
+  console.log('Shutting down...');
+  await closeDatabase();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  console.log('Shutting down...');
+  await closeDatabase();
+  process.exit(0);
+});
 
 export default app;
