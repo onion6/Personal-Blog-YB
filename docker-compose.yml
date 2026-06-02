@@ -9,7 +9,7 @@ services:
       - PORT=3001
       - DB_HOST=host.docker.internal
       - DB_PORT=3306
-      - DB_USER=admin
+      - DB_USER=my_web_db
       - DB_PASSWORD=${DB_PASSWORD:-666888}
       - DB_NAME=${DB_NAME:-my_web_db}
       - STATIC_DIR=/app/frontend/dist
