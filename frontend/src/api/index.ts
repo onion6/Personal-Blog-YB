@@ -105,4 +105,13 @@ export const getCurrentUser = (): Promise<{ user: any }> => typedGet('/auth/me')
 
 export const generateInviteCode = (): Promise<{ code: string }> => typedPost('/auth/generate-invite-code');
 
+export interface InviteCodeInfo {
+  code: string;
+  is_used: number;
+  created_at: string;
+}
+
+export const getInviteCodes = (): Promise<{ total: number; used: number; unused: number; list: InviteCodeInfo[] }> =>
+  typedGet('/auth/invite-codes');
+
 export default api;

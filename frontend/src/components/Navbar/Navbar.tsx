@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { User, FolderKanban, MessageCircle, BookOpen, Settings, Sun, Moon, Menu, X, LogIn, LogOut } from 'lucide-react';
+import { User, FolderKanban, MessageCircle, BookOpen, Settings, Sun, Moon, Menu, X, LogIn, LogOut, Key } from 'lucide-react';
 import { useThemeStore } from '../../store/useThemeStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import { getCurrentUser } from '../../api';
+import InviteCodeManager from '../InviteCodeManager/InviteCodeManager';
 import styles from './Navbar.module.css';
 
 const navItems = [
@@ -17,6 +18,7 @@ const Navbar = () => {
   const { theme, toggleTheme } = useThemeStore();
   const { isAuthenticated, user, logout, updateUser } = useAuthStore();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showInviteManager, setShowInviteManager] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -79,6 +81,9 @@ const Navbar = () => {
           
           {isAuthenticated ? (
             <>
+              <button className={styles.iconBtn} onClick={() => setShowInviteManager(true)} title="邀请码管理">
+                <Key size={18} />
+              </button>
               <NavLink to="/settings" className={styles.iconBtn} title="设置">
                 <Settings size={18} />
               </NavLink>
@@ -161,6 +166,7 @@ const Navbar = () => {
           )}
         </div>
       </div>
+      <InviteCodeManager open={showInviteManager} onClose={() => setShowInviteManager(false)} />
     </>
   );
 };

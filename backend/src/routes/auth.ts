@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import { queryOne, run } from '../database';
+import { queryOne, queryAll, run } from '../database';
 import { generateToken, AuthRequest, requireAuth } from '../middleware/auth';
 
 const router = Router();
@@ -119,6 +119,20 @@ router.get('/me', requireAuth, (req: AuthRequest, res: Response) => {
   }
 
   res.json({ user });
+});
+
+router.get('/invite-codes', requireAuth, (req: AuthRequest, res: Response) => {
+  try {
+    const total = queryOne('SELECT COUNT(*) as count FROM invite_codes')?.count || 0;
+    const used = queryOne('SELECT COUNT(*) as count FROM invite_codes WHERE is_used = 1')?.count || 0;
+    const unused = queryOne('SELECT COUNT(*) as count FROM invite_codes WHERE is_used = 0')?.count || 0;
+    const list = queryAll('SELECT code, is_used, created_at FROM invite_codes ORDER BY id DESC');
+
+    res.json({ total, used, unused, list });
+  } catch (err) {
+    console.error('获取邀请码失败:', err);
+    res.status(500).json({ error: '获取邀请码失败' });
+  }
 });
 
 router.post('/generate-invite-code', requireAuth, (req: AuthRequest, res: Response) => {
