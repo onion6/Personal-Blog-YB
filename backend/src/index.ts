@@ -16,6 +16,7 @@ import profileRouter from './routes/profile';
 import adminRouter from './routes/admin';
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT = Number(process.env.PORT) || 3001;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const CORS_ORIGINS = process.env.CORS_ORIGINS?.split(',').map(s => s.trim()) || ['http://localhost:5173'];
