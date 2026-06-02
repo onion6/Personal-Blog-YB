@@ -7,6 +7,7 @@ const dbPath = process.env.DB_PATH || path.join(__dirname, '..', 'database.sqlit
 let db: SqlJsDatabase;
 let saveTimeout: NodeJS.Timeout | null = null;
 let isSaving = false;
+let transactionDepth = 0;
 
 function saveDatabase(): void {
   if (isSaving) {
@@ -217,23 +218,30 @@ export function run(sql: string, params: any[] = []): { lastInsertRowid: number;
   if (tableName) {
     const maxIdResult = db.exec(`SELECT MAX(id) as maxId FROM ${tableName}`);
     const lastId = maxIdResult.length > 0 ? Number(maxIdResult[0].values[0][0]) || 0 : 0;
-    saveDatabase();
+    if (transactionDepth === 0) {
+      saveDatabase();
+    }
     return { lastInsertRowid: lastId, changes: 1 };
   }
 
-  saveDatabase();
+  if (transactionDepth === 0) {
+    saveDatabase();
+  }
   return { lastInsertRowid: 0, changes: 0 };
 }
 
 export function withTransaction<T>(fn: () => T): T {
   db.run('BEGIN TRANSACTION');
+  transactionDepth++;
   try {
     const result = fn();
     db.run('COMMIT');
+    transactionDepth--;
     saveDatabase();
     return result;
   } catch (err) {
     db.run('ROLLBACK');
+    transactionDepth--;
     throw err;
   }
 }
