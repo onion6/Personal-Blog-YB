@@ -2,7 +2,7 @@ import { Router, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { queryOne, queryAll, run } from '../database';
-import { generateToken, AuthRequest, requireAuth } from '../middleware/auth';
+import { generateToken, AuthRequest, requireAuth, requireAdmin } from '../middleware/auth';
 
 const router = Router();
 
@@ -75,7 +75,7 @@ router.post('/login', async (req: AuthRequest, res: Response) => {
     }
 
     const user = queryOne(
-      'SELECT id, username, password, display_name, avatar_url FROM users WHERE username = ?',
+      'SELECT id, username, password, display_name, avatar_url, role FROM users WHERE username = ?',
       [username]
     );
     
@@ -98,7 +98,8 @@ router.post('/login', async (req: AuthRequest, res: Response) => {
         id: user.id,
         username: user.username,
         display_name: user.display_name,
-        avatar_url: user.avatar_url
+        avatar_url: user.avatar_url,
+        role: user.role || 'user'
       }
     });
   } catch (err) {
@@ -109,7 +110,7 @@ router.post('/login', async (req: AuthRequest, res: Response) => {
 
 router.get('/me', requireAuth, (req: AuthRequest, res: Response) => {
   const user = queryOne(
-    'SELECT id, username, display_name, avatar_url, created_at FROM users WHERE id = ?',
+    'SELECT id, username, display_name, avatar_url, role, created_at FROM users WHERE id = ?',
     [req.user!.id]
   );
 
@@ -121,7 +122,7 @@ router.get('/me', requireAuth, (req: AuthRequest, res: Response) => {
   res.json({ user });
 });
 
-router.get('/invite-codes', requireAuth, (req: AuthRequest, res: Response) => {
+router.get('/invite-codes', requireAdmin, (req: AuthRequest, res: Response) => {
   try {
     const total = queryOne('SELECT COUNT(*) as count FROM invite_codes')?.count || 0;
     const used = queryOne('SELECT COUNT(*) as count FROM invite_codes WHERE is_used = 1')?.count || 0;
@@ -135,7 +136,7 @@ router.get('/invite-codes', requireAuth, (req: AuthRequest, res: Response) => {
   }
 });
 
-router.post('/generate-invite-code', requireAuth, (req: AuthRequest, res: Response) => {
+router.post('/generate-invite-code', requireAdmin, (req: AuthRequest, res: Response) => {
   try {
     const code = crypto.randomBytes(6).toString('hex').toUpperCase();
     

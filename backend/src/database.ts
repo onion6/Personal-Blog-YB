@@ -144,6 +144,7 @@ export async function initDatabasePromise(): Promise<void> {
 
   migrateProfileUserId();
   migrateProjectsUserId();
+  migrateUserRole();
 
   saveDatabase();
 }
@@ -166,6 +167,14 @@ function migrateProjectsUserId(): void {
   if (!hasColumn('projects', 'user_id')) {
     console.log('Migration: adding user_id to projects table');
     db.run('ALTER TABLE projects ADD COLUMN user_id INTEGER REFERENCES users(id)');
+  }
+}
+
+function migrateUserRole(): void {
+  if (!hasColumn('users', 'role')) {
+    console.log('Migration: adding role to users table');
+    db.run("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'");
+    db.run("UPDATE users SET role = 'admin' WHERE username = 'admin'");
   }
 }
 

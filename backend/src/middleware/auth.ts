@@ -44,3 +44,16 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
     res.status(401).json({ error: 'Token 无效或已过期，请重新登录' });
   }
 }
+
+export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction): void {
+  requireAuth(req, res, () => {
+    if (!req.user) return;
+    const { queryOne } = require('../database');
+    const user = queryOne('SELECT role FROM users WHERE id = ?', [req.user.id]);
+    if (!user || user.role !== 'admin') {
+      res.status(403).json({ error: '需要管理员权限' });
+      return;
+    }
+    next();
+  });
+}

@@ -81,9 +81,11 @@ const Navbar = () => {
           
           {isAuthenticated ? (
             <>
-              <button className={styles.iconBtn} onClick={() => setShowInviteManager(true)} title="邀请码管理">
-                <Key size={18} />
-              </button>
+              {user?.role === 'admin' && (
+                <button className={styles.iconBtn} onClick={() => setShowInviteManager(true)} title="邀请码管理">
+                  <Key size={18} />
+                </button>
+              )}
               <NavLink to="/settings" className={styles.iconBtn} title="设置">
                 <Settings size={18} />
               </NavLink>
