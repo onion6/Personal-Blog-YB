@@ -198,8 +198,10 @@ export function queryCount(sql: string, params: any[] = []): number {
 
 export function run(sql: string, params: any[] = []): { lastInsertRowid: number; changes: number } {
   db.run(sql, params);
-  const lastId = queryOne('SELECT last_insert_rowid() as id')?.id || 0;
-  const changes = queryOne('SELECT changes() as count')?.count || 0;
+  const lastIdResult = db.exec('SELECT last_insert_rowid()');
+  const lastId = lastIdResult.length > 0 ? Number(lastIdResult[0].values[0][0]) : 0;
+  const changesResult = db.exec('SELECT changes()');
+  const changes = changesResult.length > 0 ? Number(changesResult[0].values[0][0]) : 0;
   saveDatabase();
   return { lastInsertRowid: lastId, changes };
 }
