@@ -23,11 +23,13 @@ COPY --from=frontend-build /app/frontend/dist ./frontend/dist
 
 ENV NODE_ENV=production
 ENV PORT=3001
-ENV DB_PATH=/app/data/database.sqlite
+ENV DB_HOST=host.docker.internal
+ENV DB_PORT=3306
+ENV DB_USER=root
+ENV DB_PASSWORD=
+ENV DB_NAME=my_web_db
 ENV STATIC_DIR=/app/frontend/dist
 ENV CORS_ORIGINS=http://localhost
-
-RUN mkdir -p /app/data
 
 EXPOSE 3001
 
