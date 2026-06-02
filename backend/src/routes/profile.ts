@@ -29,7 +29,14 @@ router.get('/', (_req: AuthRequest, res: Response) => {
 router.put('/', requireAuth, writeLimiter, validateBody(updateProfileSchema), (req: AuthRequest, res: Response) => {
   const { name, title, bio, avatar_url, skills, timeline, hobbies, contacts } = req.body;
 
-  const currentProfile = queryOne('SELECT * FROM profile WHERE user_id = ?', [req.user!.id]);
+  let currentProfile = queryOne('SELECT * FROM profile WHERE user_id = ?', [req.user!.id]);
+
+  if (!currentProfile) {
+    currentProfile = queryOne('SELECT * FROM profile WHERE user_id IS NULL ORDER BY id ASC LIMIT 1');
+    if (currentProfile) {
+      run('UPDATE profile SET user_id = ? WHERE id = ?', [req.user!.id, currentProfile.id]);
+    }
+  }
 
   if (!currentProfile) {
     run(
@@ -60,8 +67,8 @@ router.put('/', requireAuth, writeLimiter, validateBody(updateProfileSchema), (r
     if (contacts !== undefined) { updates.push('contacts = ?'); values.push(JSON.stringify(contacts)); }
 
     if (updates.length > 0) {
-      values.push(req.user!.id);
-      run(`UPDATE profile SET ${updates.join(', ')} WHERE user_id = ?`, values);
+      values.push(currentProfile.id);
+      run(`UPDATE profile SET ${updates.join(', ')} WHERE id = ?`, values);
     }
 
     if (name !== undefined) {
