@@ -26,16 +26,20 @@ function getConnection(): mysql.Pool | PoolConnection {
 }
 
 export async function initDatabasePromise(): Promise<void> {
-  const tempPool = mysql.createPool({
-    host: DB_HOST,
-    port: DB_PORT,
-    user: DB_USER,
-    password: DB_PASSWORD,
-    waitForConnections: true,
-    connectionLimit: 1,
-  });
-  await tempPool.query(`CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
-  await tempPool.end();
+  try {
+    const tempPool = mysql.createPool({
+      host: DB_HOST,
+      port: DB_PORT,
+      user: DB_USER,
+      password: DB_PASSWORD,
+      waitForConnections: true,
+      connectionLimit: 1,
+    });
+    await tempPool.query(`CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
+    await tempPool.end();
+  } catch (err: any) {
+    console.log('Skip CREATE DATABASE (may already exist or no privilege):', err.message);
+  }
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
