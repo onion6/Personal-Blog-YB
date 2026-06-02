@@ -16,10 +16,10 @@ export const validateIdParam = (req: Request, res: Response, next: NextFunction)
 export const createProjectSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
   description: z.string().min(1, 'Description is required').max(1000),
-  cover_url: z.string().url().optional().or(z.literal('')),
+  cover_url: z.string().optional().or(z.literal('')),
   tech_stack: z.union([z.string(), z.array(z.string())]).optional(),
-  github_url: z.string().url().optional().or(z.literal('')),
-  demo_url: z.string().url().optional().or(z.literal('')),
+  github_url: z.string().optional().or(z.literal('')),
+  demo_url: z.string().optional().or(z.literal('')),
   status: z.enum(['进行中', '已完成', '长期维护', '已归档']).optional(),
   sort_order: z.number().int().optional(),
 });

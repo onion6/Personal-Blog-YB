@@ -40,9 +40,7 @@
 .profileHeader {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 3rem 2rem;
+  padding: 2rem;
   background: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary));
   border-radius: 20px;
   margin-bottom: 2rem;
@@ -61,12 +59,22 @@
   background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
 }
 
+.headerContent {
+  display: flex;
+  align-items: flex-start;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.avatarSection {
+  flex-shrink: 0;
+}
+
 .avatar {
   width: 120px;
   height: 120px;
   border-radius: 50%;
   object-fit: cover;
-  margin-bottom: 1.5rem;
   border: 4px solid var(--accent-primary);
   padding: 3px;
   background: var(--bg-primary);
@@ -84,8 +92,12 @@
   font-size: 3rem;
   font-weight: 700;
   color: white;
-  margin-bottom: 1.5rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.infoSection {
+  flex: 1;
+  text-align: left;
 }
 
 .profileName {
@@ -98,7 +110,7 @@
 .profileTitle {
   font-size: 1.1rem;
   color: var(--accent-primary);
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   font-weight: 500;
 }
 
@@ -106,7 +118,41 @@
   font-size: 1rem;
   color: var(--text-secondary);
   line-height: 1.6;
-  max-width: 600px;
+}
+
+.statsContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  padding: 1.5rem;
+  background: var(--bg-primary);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.statValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.statLabel {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.statDivider {
+  width: 1px;
+  height: 40px;
+  background: var(--border-color);
 }
 
 .section {
@@ -321,8 +367,10 @@
 }
 
 @media (max-width: 768px) {
-  .profileHeader {
-    padding: 2rem 1rem;
+  .headerContent {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
   }
 
   .avatar,
@@ -333,6 +381,15 @@
 
   .profileName {
     font-size: 1.5rem;
+  }
+
+  .statsContainer {
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .statValue {
+    font-size: 1.25rem;
   }
 
   .section {

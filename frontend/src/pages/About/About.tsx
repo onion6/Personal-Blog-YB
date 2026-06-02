@@ -7,6 +7,7 @@ import { useProfile, useUpdateProfile } from '../../hooks/useProfile';
 import ScrollReveal from '../../components/ScrollReveal/ScrollReveal';
 import Modal from '../../components/Modal/Modal';
 import { useToastStore } from '../../store/useToastStore';
+import { useAuthStore } from '../../store/useAuthStore';
 import type { Profile, ProfileSkill, ProfileTimelineItem, ProfileHobby, ProfileContact } from '../../types';
 import styles from './About.module.css';
 
@@ -69,6 +70,8 @@ const About = () => {
   const { data: profile } = useProfile();
   const updateMutation = useUpdateProfile();
   const addToast = useToastStore((s) => s.addToast);
+  const { user } = useAuthStore();
+  const isOwner = !!user;
 
   const [editSection, setEditSection] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -171,9 +174,11 @@ const About = () => {
             {displayText}
             {!isComplete && <span className={styles.cursor}></span>}
           </p>
-          <button className={styles.editBtnInline} onClick={() => openEdit('basic')} title="编辑基本信息">
-            <Pencil size={14} /> 编辑资料
-          </button>
+          {isOwner && (
+            <button className={styles.editBtnInline} onClick={() => openEdit('basic')} title="编辑基本信息">
+              <Pencil size={14} /> 编辑资料
+            </button>
+          )}
         </motion.section>
       </ScrollReveal>
 
@@ -184,10 +189,10 @@ const About = () => {
               <BarChart3 size={24} className={styles.sectionTitleIcon} />
               技能雷达
             </h2>
-            <button className={styles.editBtn} onClick={() => openEdit('skills')}><Pencil size={14} /></button>
+            {isOwner && <button className={styles.editBtn} onClick={() => openEdit('skills')}><Pencil size={14} /></button>}
           </div>
           <div className={styles.radarContainer}>
-            {p.skills.length > 0 ? <RadarChart skills={p.skills} /> : <p className={styles.emptyHint}>暂无技能数据，点击编辑添加</p>}
+            {p.skills.length > 0 ? <RadarChart skills={p.skills} /> : <p className={styles.emptyHint}>暂无技能数据</p>}
           </div>
         </section>
       </ScrollReveal>
@@ -199,7 +204,7 @@ const About = () => {
               <Briefcase size={24} className={styles.sectionTitleIcon} />
               经历
             </h2>
-            <button className={styles.editBtn} onClick={() => openEdit('timeline')}><Pencil size={14} /></button>
+            {isOwner && <button className={styles.editBtn} onClick={() => openEdit('timeline')}><Pencil size={14} /></button>}
           </div>
           {p.timeline.length > 0 ? (
             <div className={styles.timeline}>
@@ -228,7 +233,7 @@ const About = () => {
               <Heart size={24} className={styles.sectionTitleIcon} />
               兴趣爱好
             </h2>
-            <button className={styles.editBtn} onClick={() => openEdit('hobbies')}><Pencil size={14} /></button>
+            {isOwner && <button className={styles.editBtn} onClick={() => openEdit('hobbies')}><Pencil size={14} /></button>}
           </div>
           {p.hobbies.length > 0 ? (
             <div className={styles.hobbyGrid}>
@@ -244,7 +249,7 @@ const About = () => {
               ))}
             </div>
           ) : (
-            <p className={styles.emptyHint}>暂无兴趣数据，点击编辑添加</p>
+            <p className={styles.emptyHint}>暂无兴趣数据</p>
           )}
         </section>
       </ScrollReveal>
@@ -256,7 +261,7 @@ const About = () => {
               <Mail size={24} className={styles.sectionTitleIcon} />
               联系方式
             </h2>
-            <button className={styles.editBtn} onClick={() => openEdit('contacts')}><Pencil size={14} /></button>
+            {isOwner && <button className={styles.editBtn} onClick={() => openEdit('contacts')}><Pencil size={14} /></button>}
           </div>
           {p.contacts.length > 0 ? (
             <div className={styles.contactGrid}>
@@ -273,7 +278,7 @@ const About = () => {
               })}
             </div>
           ) : (
-            <p className={styles.emptyHint}>暂无联系方式，点击编辑添加</p>
+            <p className={styles.emptyHint}>暂无联系方式</p>
           )}
         </section>
       </ScrollReveal>

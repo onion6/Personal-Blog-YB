@@ -141,6 +141,17 @@ export async function initDatabasePromise(): Promise<void> {
   console.log('MySQL database tables initialized');
 
   await pool.query("UPDATE users SET role = 'admin' WHERE username = 'admin' AND role != 'admin'");
+
+  try {
+    await pool.query("ALTER TABLE posts ADD COLUMN user_id INT UNSIGNED AFTER id");
+    console.log('Migration: added user_id to posts table');
+  } catch (err: any) {
+    if (err.code !== 'ER_DUP_FIELDNAME') {
+      console.error('Migration error (posts.user_id):', err.message);
+    }
+  }
+
+  await pool.query("UPDATE posts SET user_id = 1 WHERE user_id IS NULL");
 }
 
 export async function queryAll(sql: string, params: any[] = []): Promise<any[]> {

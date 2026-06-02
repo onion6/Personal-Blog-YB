@@ -16,6 +16,23 @@ function parseProfile(profile: any) {
   };
 }
 
+router.get('/public', asyncHandler(async (_req: Request, res: Response) => {
+  const profile = await queryOne(
+    `SELECT p.*, u.username, u.display_name
+     FROM profile p
+     JOIN users u ON p.user_id = u.id
+     WHERE u.role = 'admin'
+     ORDER BY p.id ASC
+     LIMIT 1`
+  );
+
+  if (!profile) {
+    return res.status(404).json({ error: '暂无博主信息' });
+  }
+
+  res.json(parseProfile(profile));
+}));
+
 router.get('/', requireAuth, asyncHandler(async (req: AuthRequest, res: Response) => {
   const profile = await queryOne('SELECT * FROM profile WHERE user_id = ?', [req.user!.id]);
 
@@ -67,6 +84,31 @@ router.get('/user/:userId', asyncHandler(async (req: Request, res: Response) => 
   };
 
   res.json(result);
+}));
+
+router.get('/user/:userId/stats', asyncHandler(async (req: Request, res: Response) => {
+  const { userId } = req.params;
+  const id = Number(userId);
+
+  const user = await queryOne('SELECT id FROM users WHERE id = ?', [id]);
+  if (!user) {
+    return res.status(404).json({ error: '用户不存在' });
+  }
+
+  const postCount = (await queryOne('SELECT COUNT(*) as count FROM posts WHERE user_id = ?', [id]))?.count || 0;
+  const projectCount = (await queryOne('SELECT COUNT(*) as count FROM projects WHERE user_id = ?', [id]))?.count || 0;
+  const totalLikes = (await queryOne('SELECT COALESCE(SUM(likes), 0) as total FROM posts WHERE user_id = ?', [id]))?.total || 0;
+  const commentCount = (await queryOne(
+    'SELECT COUNT(*) as count FROM comments c JOIN posts p ON c.post_id = p.id WHERE p.user_id = ?',
+    [id]
+  ))?.count || 0;
+
+  res.json({
+    post_count: postCount,
+    project_count: projectCount,
+    total_likes: totalLikes,
+    comment_count: commentCount,
+  });
 }));
 
 router.get('/users', asyncHandler(async (req: Request, res: Response) => {

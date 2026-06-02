@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Github, ExternalLink, FolderKanban, Plus, Loader2, Pencil, Trash2, Save } from 'lucide-react';
-import { useProjects, useCreateProject, useUpdateProject, useDeleteProject } from '../../hooks/useProjects';
+import { useMyProjects, useCreateProject, useUpdateProject, useDeleteProject } from '../../hooks/useProjects';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { useToastStore } from '../../store/useToastStore';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -9,6 +9,7 @@ import type { Project } from '../../types';
 import Card from '../../components/Card/Card';
 import Tag from '../../components/Tag/Tag';
 import Modal from '../../components/Modal/Modal';
+import ConfirmModal from '../../components/ConfirmModal/ConfirmModal';
 import Skeleton from '../../components/Skeleton/Skeleton';
 import ScrollReveal from '../../components/ScrollReveal/ScrollReveal';
 import styles from './Projects.module.css';
@@ -20,7 +21,7 @@ const Projects = () => {
   const { addToast } = useToastStore();
   const { isAuthenticated, user } = useAuthStore();
   const navigate = useNavigate();
-  const { data: projects = [], isLoading } = useProjects();
+  const { data: projects = [], isLoading } = useMyProjects();
   const createProjectMutation = useCreateProject();
   const updateProjectMutation = useUpdateProject();
   const deleteProjectMutation = useDeleteProject();
@@ -39,6 +40,8 @@ const Projects = () => {
     status: '进行中',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
 
   const parseTech = (tech: any): string[] => {
     if (Array.isArray(tech)) return tech;
@@ -132,14 +135,21 @@ const Projects = () => {
     setErrors({});
   };
 
-  const handleDelete = async (project: Project, e: React.MouseEvent) => {
+  const handleDelete = (project: Project, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!window.confirm(`确定要删除项目"${project.name}"吗？`)) return;
+    setProjectToDelete(project);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!projectToDelete) return;
     try {
-      await deleteProjectMutation.mutateAsync(project.id);
+      await deleteProjectMutation.mutateAsync(projectToDelete.id);
       addToast('项目已删除', 'success');
     } catch {
       addToast('删除失败，请稍后重试', 'error');
+    } finally {
+      setProjectToDelete(null);
     }
   };
 
@@ -572,6 +582,19 @@ const Projects = () => {
           </div>
         </div>
       </Modal>
+
+      <ConfirmModal
+        open={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setProjectToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        title="确认删除"
+        message={`确定要删除项目"${projectToDelete?.name}"吗？此操作不可撤销。`}
+        confirmText="删除"
+        cancelText="取消"
+      />
     </div>
   );
 };

@@ -96,6 +96,7 @@ export const getSettings = (): Promise<Settings> => typedGet('/settings');
 export const updateSettings = (data: Settings): Promise<Settings> => typedPut('/settings', data);
 
 export const getProfile = (): Promise<Profile> => typedGet('/profile');
+export const getPublicProfile = (): Promise<Profile> => typedGet('/profile/public');
 export const updateProfile = (data: Partial<Profile>): Promise<Profile> => typedPut('/profile', data);
 
 export const login = (username: string, password: string): Promise<{ token: string; user: any }> =>
@@ -147,6 +148,15 @@ export interface UserListItem {
 }
 
 export const getUserProfile = (userId: number): Promise<UserProfile> => typedGet(`/profile/user/${userId}`);
+
+export interface UserStats {
+  post_count: number;
+  project_count: number;
+  total_likes: number;
+  comment_count: number;
+}
+
+export const getUserStats = (userId: number): Promise<UserStats> => typedGet(`/profile/user/${userId}/stats`);
 
 export const getUsers = async (params?: { page?: number; pageSize?: number; search?: string }): Promise<PaginatedResponse<UserListItem>> => {
   const res = await typedGet<unknown>('/profile/users', { params });

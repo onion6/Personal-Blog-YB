@@ -41,6 +41,21 @@ router.get('/my', requireAuth, asyncHandler(async (req: AuthRequest, res: Respon
   res.json(projects);
 }));
 
+router.get('/:id', validateIdParam, asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+  const project = await queryOne(
+    `SELECT p.*, u.display_name as author_name FROM projects p LEFT JOIN users u ON p.user_id = u.id WHERE p.id = ?`,
+    [Number(id)]
+  );
+
+  if (!project) {
+    res.status(404).json({ error: '项目不存在' });
+    return;
+  }
+
+  res.json(project);
+}));
+
 router.post('/', requireAuth, writeLimiter, validateBody(createProjectSchema), asyncHandler(async (req: AuthRequest, res: Response) => {
   const { name, description, cover_url, tech_stack, github_url, demo_url, status, sort_order } = req.body;
   const techStackStr = typeof tech_stack === 'string' ? tech_stack : JSON.stringify(tech_stack || []);

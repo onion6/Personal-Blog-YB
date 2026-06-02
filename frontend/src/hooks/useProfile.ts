@@ -1,6 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getProfile, updateProfile } from '../api';
+import { getProfile, getPublicProfile, updateProfile } from '../api';
 import type { Profile } from '../types';
+
+export const usePublicProfile = () => {
+  return useQuery<Profile>({
+    queryKey: ['publicProfile'],
+    queryFn: getPublicProfile,
+  });
+};
 
 export const useProfile = () => {
   return useQuery<Profile>({
@@ -15,6 +22,7 @@ export const useUpdateProfile = () => {
     mutationFn: (data: Partial<Profile>) => updateProfile(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['publicProfile'] });
     },
   });
 };

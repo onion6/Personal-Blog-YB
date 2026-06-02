@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Briefcase, Clock, Heart, Mail, Code, GraduationCap } from 'lucide-react';
-import { getUserProfile, type UserProfile as UserProfileType } from '../../api';
+import { ArrowLeft, User, Briefcase, Clock, Heart, Mail, Code, GraduationCap, FileText, FolderKanban, ThumbsUp, MessageCircle } from 'lucide-react';
+import { getUserProfile, getUserStats, type UserProfile as UserProfileType, type UserStats } from '../../api';
 import styles from './UserProfile.module.css';
 
 const UserProfile = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfileType | null>(null);
+  const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -21,8 +22,12 @@ const UserProfile = () => {
     setLoading(true);
     setError('');
     try {
-      const data = await getUserProfile(id);
-      setProfile(data);
+      const [profileData, statsData] = await Promise.all([
+        getUserProfile(id),
+        getUserStats(id),
+      ]);
+      setProfile(profileData);
+      setStats(statsData);
     } catch (err: any) {
       setError(err.response?.data?.error || '加载失败');
     } finally {
@@ -32,6 +37,16 @@ const UserProfile = () => {
 
   const getInitial = (name: string) => {
     return name?.charAt(0)?.toUpperCase() || 'U';
+  };
+
+  const formatNumber = (num: number) => {
+    if (num >= 10000) {
+      return (num / 10000).toFixed(1) + 'w';
+    }
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'k';
+    }
+    return num.toString();
   };
 
   if (loading) {
@@ -67,16 +82,46 @@ const UserProfile = () => {
       </button>
 
       <div className={styles.profileHeader}>
-        {profile.avatar_url ? (
-          <img src={profile.avatar_url} alt={profile.name} className={styles.avatar} />
-        ) : (
-          <div className={styles.avatarPlaceholder}>
-            {getInitial(profile.name)}
+        <div className={styles.headerContent}>
+          <div className={styles.avatarSection}>
+            {profile.avatar_url ? (
+              <img src={profile.avatar_url} alt={profile.name} className={styles.avatar} />
+            ) : (
+              <div className={styles.avatarPlaceholder}>
+                {getInitial(profile.name)}
+              </div>
+            )}
+          </div>
+          <div className={styles.infoSection}>
+            <h1 className={styles.profileName}>{profile.display_name || profile.name}</h1>
+            {profile.title && <p className={styles.profileTitle}>{profile.title}</p>}
+            {profile.bio && <p className={styles.profileBio}>{profile.bio}</p>}
+          </div>
+        </div>
+
+        {stats && (
+          <div className={styles.statsContainer}>
+            <div className={styles.statItem}>
+              <span className={styles.statValue}>{formatNumber(stats.total_likes)}</span>
+              <span className={styles.statLabel}>获赞</span>
+            </div>
+            <div className={styles.statDivider} />
+            <div className={styles.statItem}>
+              <span className={styles.statValue}>{formatNumber(stats.post_count)}</span>
+              <span className={styles.statLabel}>文章</span>
+            </div>
+            <div className={styles.statDivider} />
+            <div className={styles.statItem}>
+              <span className={styles.statValue}>{formatNumber(stats.project_count)}</span>
+              <span className={styles.statLabel}>项目</span>
+            </div>
+            <div className={styles.statDivider} />
+            <div className={styles.statItem}>
+              <span className={styles.statValue}>{formatNumber(stats.comment_count)}</span>
+              <span className={styles.statLabel}>评论</span>
+            </div>
           </div>
         )}
-        <h1 className={styles.profileName}>{profile.display_name || profile.name}</h1>
-        {profile.title && <p className={styles.profileTitle}>{profile.title}</p>}
-        {profile.bio && <p className={styles.profileBio}>{profile.bio}</p>}
       </div>
 
       {profile.skills && profile.skills.length > 0 && (
