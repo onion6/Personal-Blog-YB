@@ -206,28 +206,18 @@ export function queryCount(sql: string, params: any[] = []): number {
   return result?.count || 0;
 }
 
-function extractTableName(sql: string): string | null {
-  const match = sql.match(/INSERT\s+INTO\s+(\w+)/i);
-  return match ? match[1] : null;
-}
-
 export function run(sql: string, params: any[] = []): { lastInsertRowid: number; changes: number } {
   db.run(sql, params);
 
-  const tableName = extractTableName(sql);
-  if (tableName) {
-    const maxIdResult = db.exec(`SELECT MAX(id) as maxId FROM ${tableName}`);
-    const lastId = maxIdResult.length > 0 ? Number(maxIdResult[0].values[0][0]) || 0 : 0;
-    if (transactionDepth === 0) {
-      saveDatabase();
-    }
-    return { lastInsertRowid: lastId, changes: 1 };
-  }
+  const lastIdResult = db.exec('SELECT last_insert_rowid()');
+  const lastId = lastIdResult.length > 0 ? Number(lastIdResult[0].values[0][0]) : 0;
+  const changesResult = db.exec('SELECT changes()');
+  const changes = changesResult.length > 0 ? Number(changesResult[0].values[0][0]) : 0;
 
   if (transactionDepth === 0) {
     saveDatabase();
   }
-  return { lastInsertRowid: 0, changes: 0 };
+  return { lastInsertRowid: lastId, changes };
 }
 
 export function withTransaction<T>(fn: () => T): T {

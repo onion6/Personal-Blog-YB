@@ -32,12 +32,16 @@ router.post('/register', async (req: AuthRequest, res: Response) => {
     }
     
     if (codeRecord.is_used) {
+      const usedByUser = queryOne(
+        'SELECT id, username FROM users WHERE id = ?',
+        [codeRecord.used_by]
+      );
+      console.error(`邀请码已被使用: code=${invite_code}, used_by=${codeRecord.used_by}, user=${usedByUser?.username || 'unknown'}`);
       res.status(400).json({ error: '邀请码已被使用' });
       return;
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-
     const displayNameValue = display_name || username;
 
     const result = withTransaction(() => {
@@ -49,8 +53,16 @@ router.post('/register', async (req: AuthRequest, res: Response) => {
       run('UPDATE invite_codes SET is_used = 1, used_by = ? WHERE id = ?', 
         [userResult.lastInsertRowid, codeRecord.id]);
 
-      run('INSERT INTO profile (user_id, name) VALUES (?, ?)', 
-        [userResult.lastInsertRowid, displayNameValue]);
+      const existingProfile = queryOne(
+        'SELECT id FROM profile WHERE user_id = ?',
+        [userResult.lastInsertRowid]
+      );
+      if (existingProfile) {
+        console.error(`用户 ${username}(id=${userResult.lastInsertRowid}) 的 profile 已存在，跳过创建`);
+      } else {
+        run('INSERT INTO profile (user_id, name) VALUES (?, ?)', 
+          [userResult.lastInsertRowid, displayNameValue]);
+      }
 
       return userResult;
     });
@@ -65,8 +77,13 @@ router.post('/register', async (req: AuthRequest, res: Response) => {
         display_name: displayNameValue
       }
     });
-  } catch (err) {
+  } catch (err: any) {
     console.error('注册失败:', err);
+    console.error('注册失败详情:', {
+      message: err.message,
+      stack: err.stack,
+      body: { username: req.body.username, invite_code: req.body.invite_code }
+    });
     res.status(500).json({ error: '注册失败，请稍后重试' });
   }
 });
