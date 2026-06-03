@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getProjects, getMyProjects, createProject, updateProject, deleteProject } from '../api';
+import { getProjects, getUserProjects, getMyProjects, createProject, updateProject, deleteProject } from '../api';
 import type { Project } from '../types';
 
 export const useProjects = () => {
@@ -9,6 +9,17 @@ export const useProjects = () => {
       const res = await getProjects();
       return res.data;
     },
+  });
+};
+
+export const useUserProjects = (userId: number | undefined, enabled = true) => {
+  return useQuery<Project[]>({
+    queryKey: ['userProjects', userId],
+    queryFn: async () => {
+      const res = await getUserProjects(userId!);
+      return res.data;
+    },
+    enabled: enabled && !!userId,
   });
 };
 

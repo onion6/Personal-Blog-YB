@@ -73,6 +73,10 @@ export const getProjects = async (params?: { tag?: string; page?: number; pageSi
   const res = await typedGet<unknown>('/projects', { params });
   return ensurePaginated<Project>(res);
 };
+export const getUserProjects = async (userId: number, params?: { tag?: string; page?: number; pageSize?: number }): Promise<PaginatedResponse<Project>> => {
+  const res = await typedGet<unknown>(`/projects/user/${userId}`, { params });
+  return ensurePaginated<Project>(res);
+};
 export const getMyProjects = (): Promise<Project[]> => typedGet('/projects/my');
 export const createProject = (data: Partial<Project>): Promise<Project> => typedPost('/projects', data);
 export const updateProject = (id: number, data: Partial<Project>): Promise<Project> => typedPut(`/projects/${id}`, data);

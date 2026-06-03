@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Github, ExternalLink, FolderKanban, Plus, Loader2, Pencil, Trash2, Save } from 'lucide-react';
-import { useProjects, useMyProjects, useCreateProject, useUpdateProject, useDeleteProject } from '../../hooks/useProjects';
+import { useProjects, useUserProjects, useMyProjects, useCreateProject, useUpdateProject, useDeleteProject } from '../../hooks/useProjects';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { useToastStore } from '../../store/useToastStore';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -17,14 +17,32 @@ import styles from './Projects.module.css';
 const filterTags = ['全部', 'React', 'Vue', 'Node', 'Python', '全栈'];
 
 const Projects = () => {
+  const { userId } = useParams<{ userId: string }>();
   const { layout } = useSettingsStore();
   const { addToast } = useToastStore();
   const { isAuthenticated, user } = useAuthStore();
   const navigate = useNavigate();
-  // 已登录用户使用个人项目接口（可编辑），未登录访客使用公开项目列表
-  const publicProjects = useProjects();
-  const myProjects = useMyProjects(isAuthenticated);
-  const { data: projects = [], isLoading } = isAuthenticated ? myProjects : publicProjects;
+
+  // 判断是否为查看自己的项目（无 userId 参数且已登录）
+  const isViewingSelf = !userId && isAuthenticated;
+  // 判断是否为查看指定用户的项目
+  const isViewingUser = !!userId;
+
+  // 根据场景加载不同的项目列表
+  const allProjects = useProjects();
+  const userProjects = useUserProjects(userId ? Number(userId) : undefined, isViewingUser);
+  const myProjects = useMyProjects(isViewingSelf);
+
+  // 选择数据源：查看指定用户 → 用户项目，查看自己 → 我的项目，其他 → 所有项目
+  const { data: projects = [], isLoading } = isViewingUser
+    ? userProjects
+    : isViewingSelf
+      ? myProjects
+      : allProjects;
+
+  // 判断是否为项目所有者（查看自己的项目时可编辑）
+  const isOwner = isViewingSelf;
+
   const createProjectMutation = useCreateProject();
   const updateProjectMutation = useUpdateProject();
   const deleteProjectMutation = useDeleteProject();
@@ -119,8 +137,8 @@ const Projects = () => {
     setErrors({});
   };
 
-  const isOwner = (project: Project) => {
-    return isAuthenticated && user && project.user_id === user.id;
+  const isProjectOwner = (project: Project) => {
+    return isOwner && user && project.user_id === user.id;
   };
 
   const handleEdit = (project: Project, e: React.MouseEvent) => {
@@ -191,10 +209,10 @@ const Projects = () => {
             </div>
             <button 
               className={styles.createBtn}
-              onClick={() => isAuthenticated ? setShowCreateModal(true) : navigate('/login')}
+              onClick={() => isOwner ? setShowCreateModal(true) : navigate('/login')}
             >
               <Plus size={18} />
-              {isAuthenticated ? '新建项目' : '登录后新建'}
+              {isOwner ? '新建项目' : '登录后新建'}
             </button>
           </div>
         </div>
@@ -254,7 +272,7 @@ const Projects = () => {
                 <div className={styles.projectInfo}>
                   <div className={styles.projectNameRow}>
                     <h3 className={styles.projectName}>{project.name}</h3>
-                    {isOwner(project) && (
+                    {isProjectOwner(project) && (
                       <div className={styles.projectActions}>
                         <button className={styles.actionBtn} onClick={(e) => handleEdit(project, e)} title="编辑">
                           <Pencil size={14} />

@@ -87,9 +87,11 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Navigate to="/about" replace />} />
             <Route path="/about" element={<About />} />
+            <Route path="/about/:userId" element={<About />} />
             <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
             <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
             <Route path="/projects" element={<Projects />} />
+            <Route path="/projects/user/:userId" element={<Projects />} />
             <Route path="/discussion" element={<Discussion />} />
             <Route path="/resources" element={<Resources />} />
             <Route path="/users" element={<Users />} />

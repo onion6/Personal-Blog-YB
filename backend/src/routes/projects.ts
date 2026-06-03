@@ -33,6 +33,41 @@ router.get('/', asyncHandler(async (req: AuthRequest, res: Response) => {
   res.json({ data: projects, total, page: pageNum, pageSize: size });
 }));
 
+router.get('/user/:userId', asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { userId } = req.params;
+  const { tag, page, pageSize } = req.query;
+  const pageNum = Math.max(1, Number(page) || 1);
+  const size = Math.min(100, Math.max(1, Number(pageSize) || 20));
+  const offset = (pageNum - 1) * size;
+  const id = Number(userId);
+
+  // 验证用户是否存在
+  const user = await queryOne('SELECT id FROM users WHERE id = ?', [id]);
+  if (!user) {
+    return res.status(404).json({ error: '用户不存在' });
+  }
+
+  let whereClause = ' WHERE p.user_id = ?';
+  const params: any[] = [id];
+
+  if (tag) {
+    whereClause += ' AND p.tech_stack LIKE ?';
+    params.push(`%${tag}%`);
+  }
+
+  const total = await queryCount(
+    `SELECT COUNT(*) as count FROM projects p${whereClause}`,
+    params
+  );
+
+  const projects = await queryAll(
+    `SELECT p.*, u.display_name as author_name FROM projects p LEFT JOIN users u ON p.user_id = u.id${whereClause} ORDER BY p.sort_order ASC LIMIT ? OFFSET ?`,
+    [...params, size, offset]
+  );
+
+  res.json({ data: projects, total, page: pageNum, pageSize: size });
+}));
+
 router.get('/my', requireAuth, asyncHandler(async (req: AuthRequest, res: Response) => {
   const projects = await queryAll(
     'SELECT * FROM projects WHERE user_id = ? ORDER BY sort_order ASC',

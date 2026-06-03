@@ -1,9 +1,11 @@
-import { useState, useMemo } from 'react';
-import { BarChart3, Briefcase, Heart, Mail, Github, Globe, Pencil, Plus, Trash2, Save, Loader2 } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { BarChart3, Briefcase, Heart, Mail, Github, Globe, Pencil, Plus, Trash2, Save, Loader2, Share2, Check } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useTypewriter } from '../../hooks/useTypewriter';
 import { useProfile, usePublicProfile, useUpdateProfile } from '../../hooks/useProfile';
+import { getUserProfile, type UserProfile } from '../../api';
 import ScrollReveal from '../../components/ScrollReveal/ScrollReveal';
 import Modal from '../../components/Modal/Modal';
 import { useToastStore } from '../../store/useToastStore';
@@ -67,16 +69,58 @@ const RadarChart = ({ skills }: { skills: ProfileSkill[] }) => {
 };
 
 const About = () => {
+  const { userId } = useParams<{ userId: string }>();
   const { user } = useAuthStore();
-  const isOwner = !!user;
-  // 已登录用户（博主本人）使用需要认证的接口以获取完整数据
-  // 未登录访客使用公开接口查看个人介绍
-  const { data: authProfile } = useProfile(isOwner);
-  const { data: publicProfile } = usePublicProfile();
-  const profile = isOwner ? authProfile : publicProfile;
-  const updateMutation = useUpdateProfile();
   const addToast = useToastStore((s) => s.addToast);
 
+  // 判断是否为查看自己的主页（无 userId 参数且已登录）
+  const isViewingSelf = !userId && !!user;
+  // 判断是否为查看指定用户的主页
+  const isViewingUser = !!userId;
+  // 判断是否为博主本人（查看自己且已登录）
+  const isOwner = isViewingSelf;
+
+  // 加载指定用户的资料（公开接口）
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [userLoading, setUserLoading] = useState(false);
+
+  // 已登录用户（博主本人）使用需要认证的接口以获取完整数据
+  const { data: authProfile } = useProfile(isViewingSelf);
+  // 未登录访客查看首页使用公开接口
+  const { data: publicProfile } = usePublicProfile();
+
+  // 根据场景选择数据源
+  const profile = isViewingUser ? userProfile : (isOwner ? authProfile : publicProfile);
+
+  // 加载指定用户资料
+  useEffect(() => {
+    if (userId) {
+      setUserLoading(true);
+      getUserProfile(Number(userId))
+        .then(setUserProfile)
+        .catch(() => addToast('用户不存在', 'error'))
+        .finally(() => setUserLoading(false));
+    } else {
+      setUserProfile(null);
+    }
+  }, [userId, addToast]);
+
+  const updateMutation = useUpdateProfile();
+
+  // 分享主页链接
+  const handleShare = async () => {
+    const shareUrl = user
+      ? `${window.location.origin}/about/${user.id}`
+      : window.location.href;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      addToast('链接已复制到剪贴板');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      addToast('复制失败，请手动复制', 'error');
+    }
+  };
   const [editSection, setEditSection] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -162,6 +206,17 @@ const About = () => {
     }
   };
 
+  // 加载中状态
+  if (userLoading) {
+    return (
+      <div className={styles.aboutPage}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh', color: 'var(--text-secondary)' }}>
+          加载中...
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.aboutPage}>
       <ScrollReveal>
@@ -178,11 +233,17 @@ const About = () => {
             {displayText}
             {!isComplete && <span className={styles.cursor}></span>}
           </p>
-          {isOwner && (
-            <button className={styles.editBtnInline} onClick={() => openEdit('basic')} title="编辑基本信息">
-              <Pencil size={14} /> 编辑资料
+          <div className={styles.heroActions}>
+            {isOwner && (
+              <button className={styles.editBtnInline} onClick={() => openEdit('basic')} title="编辑基本信息">
+                <Pencil size={14} /> 编辑资料
+              </button>
+            )}
+            <button className={styles.shareBtn} onClick={handleShare} title="分享主页">
+              {copied ? <Check size={14} /> : <Share2 size={14} />}
+              {copied ? '已复制' : '分享主页'}
             </button>
-          )}
+          </div>
         </motion.section>
       </ScrollReveal>
 

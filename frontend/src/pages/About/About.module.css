@@ -87,6 +87,33 @@
   box-shadow: var(--glow-shadow);
 }
 
+.heroActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.shareBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  font-size: 13px;
+  color: var(--accent);
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.shareBtn:hover {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: var(--accent);
+  box-shadow: var(--glow-shadow);
+}
+
 .sectionHeader {
   display: flex;
   align-items: center;

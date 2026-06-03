@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { User, FolderKanban, MessageCircle, BookOpen, Settings, Sun, Moon, Menu, X, LogIn, LogOut, Key, Users } from 'lucide-react';
 import { useThemeStore } from '../../store/useThemeStore';
@@ -7,20 +7,23 @@ import { getCurrentUser } from '../../api';
 import InviteCodeManager from '../InviteCodeManager/InviteCodeManager';
 import styles from './Navbar.module.css';
 
-const navItems = [
-  { to: '/about', label: '个人介绍', icon: User },
-  { to: '/projects', label: '项目展示', icon: FolderKanban },
-  { to: '/discussion', label: '技术交流', icon: MessageCircle },
-  { to: '/resources', label: '资源分享', icon: BookOpen },
-  { to: '/users', label: '社区成员', icon: Users },
-];
-
 const Navbar = () => {
   const { theme, toggleTheme } = useThemeStore();
   const { isAuthenticated, user, logout, updateUser } = useAuthStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const [showInviteManager, setShowInviteManager] = useState(false);
   const navigate = useNavigate();
+
+  // 根据登录状态动态生成导航链接
+  // 已登录用户：个人介绍和项目展示指向自己的主页
+  // 未登录用户：指向公共页面
+  const navItems = useMemo(() => [
+    { to: isAuthenticated && user ? `/about/${user.id}` : '/about', label: '个人介绍', icon: User },
+    { to: isAuthenticated && user ? `/projects/user/${user.id}` : '/projects', label: '项目展示', icon: FolderKanban },
+    { to: '/discussion', label: '技术交流', icon: MessageCircle },
+    { to: '/resources', label: '资源分享', icon: BookOpen },
+    { to: '/users', label: '社区成员', icon: Users },
+  ], [isAuthenticated, user]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -54,7 +57,7 @@ const Navbar = () => {
   return (
     <>
       <nav className={styles.navbar}>
-        <NavLink to="/about" className={styles.logo} onClick={() => setMenuOpen(false)}>
+        <NavLink to={isAuthenticated && user ? `/about/${user.id}` : '/about'} className={styles.logo} onClick={() => setMenuOpen(false)}>
           My<span className={styles.logoAccent}>Blog</span>
         </NavLink>
 
