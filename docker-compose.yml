@@ -19,7 +19,9 @@ services:
       - "3001"
 
   nginx:
-    image: nginx:alpine
+    build:
+      context: .
+      target: nginx-build
     restart: unless-stopped
     ports:
       - "8080:80"
