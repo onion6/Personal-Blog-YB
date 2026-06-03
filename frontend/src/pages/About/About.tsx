@@ -108,18 +108,39 @@ const About = () => {
   const updateMutation = useUpdateProfile();
 
   // 分享主页链接
-  const handleShare = async () => {
+  const handleShare = () => {
     const shareUrl = user
       ? `${window.location.origin}/about/${user.id}`
       : window.location.href;
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setCopied(true);
-      addToast('链接已复制到剪贴板');
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      addToast('复制失败，请手动复制', 'error');
-    }
+
+    const doCopy = async () => {
+      // 优先使用 Clipboard API（HTTPS / localhost）
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+        return true;
+      }
+      // 回退方案：创建临时 textarea 兼容 HTTP 环境
+      const textarea = document.createElement('textarea');
+      textarea.value = shareUrl;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      if (!ok) throw new Error('copy failed');
+      return true;
+    };
+
+    doCopy()
+      .then(() => {
+        setCopied(true);
+        addToast('链接已复制到剪贴板');
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(() => {
+        addToast('复制失败，请手动复制', 'error');
+      });
   };
   const [copied, setCopied] = useState(false);
   const [editSection, setEditSection] = useState<string | null>(null);
