@@ -121,6 +121,7 @@ const About = () => {
       addToast('复制失败，请手动复制', 'error');
     }
   };
+  const [copied, setCopied] = useState(false);
   const [editSection, setEditSection] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
