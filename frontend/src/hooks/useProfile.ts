@@ -9,10 +9,11 @@ export const usePublicProfile = () => {
   });
 };
 
-export const useProfile = () => {
+export const useProfile = (enabled = true) => {
   return useQuery<Profile>({
     queryKey: ['profile'],
     queryFn: getProfile,
+    enabled,
   });
 };
 

@@ -12,10 +12,11 @@ export const useProjects = () => {
   });
 };
 
-export const useMyProjects = () => {
+export const useMyProjects = (enabled = true) => {
   return useQuery<Project[]>({
     queryKey: ['myProjects'],
     queryFn: getMyProjects,
+    enabled,
   });
 };
 

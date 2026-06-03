@@ -3,7 +3,7 @@ import { BarChart3, Briefcase, Heart, Mail, Github, Globe, Pencil, Plus, Trash2,
 import type { LucideIcon } from 'lucide-react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useTypewriter } from '../../hooks/useTypewriter';
-import { useProfile, useUpdateProfile } from '../../hooks/useProfile';
+import { useProfile, usePublicProfile, useUpdateProfile } from '../../hooks/useProfile';
 import ScrollReveal from '../../components/ScrollReveal/ScrollReveal';
 import Modal from '../../components/Modal/Modal';
 import { useToastStore } from '../../store/useToastStore';
@@ -67,11 +67,15 @@ const RadarChart = ({ skills }: { skills: ProfileSkill[] }) => {
 };
 
 const About = () => {
-  const { data: profile } = useProfile();
-  const updateMutation = useUpdateProfile();
-  const addToast = useToastStore((s) => s.addToast);
   const { user } = useAuthStore();
   const isOwner = !!user;
+  // 已登录用户（博主本人）使用需要认证的接口以获取完整数据
+  // 未登录访客使用公开接口查看个人介绍
+  const { data: authProfile } = useProfile(isOwner);
+  const { data: publicProfile } = usePublicProfile();
+  const profile = isOwner ? authProfile : publicProfile;
+  const updateMutation = useUpdateProfile();
+  const addToast = useToastStore((s) => s.addToast);
 
   const [editSection, setEditSection] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);

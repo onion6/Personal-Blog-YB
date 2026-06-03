@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Github, ExternalLink, FolderKanban, Plus, Loader2, Pencil, Trash2, Save } from 'lucide-react';
-import { useMyProjects, useCreateProject, useUpdateProject, useDeleteProject } from '../../hooks/useProjects';
+import { useProjects, useMyProjects, useCreateProject, useUpdateProject, useDeleteProject } from '../../hooks/useProjects';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { useToastStore } from '../../store/useToastStore';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -21,7 +21,10 @@ const Projects = () => {
   const { addToast } = useToastStore();
   const { isAuthenticated, user } = useAuthStore();
   const navigate = useNavigate();
-  const { data: projects = [], isLoading } = useMyProjects();
+  // 已登录用户使用个人项目接口（可编辑），未登录访客使用公开项目列表
+  const publicProjects = useProjects();
+  const myProjects = useMyProjects(isAuthenticated);
+  const { data: projects = [], isLoading } = isAuthenticated ? myProjects : publicProjects;
   const createProjectMutation = useCreateProject();
   const updateProjectMutation = useUpdateProject();
   const deleteProjectMutation = useDeleteProject();

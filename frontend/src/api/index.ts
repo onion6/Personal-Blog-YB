@@ -28,7 +28,10 @@ let isRedirectingToLogin = false;
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    if (error.response?.status === 401 && !isRedirectingToLogin) {
+    const token = localStorage.getItem('auth_token');
+    // 仅当已登录用户（有 token）收到 401 时才跳转登录页（token 过期/无效）
+    // 未登录用户的公开接口请求收到 401 不跳转
+    if (error.response?.status === 401 && token && !isRedirectingToLogin) {
       isRedirectingToLogin = true;
       localStorage.removeItem('auth_token');
       localStorage.removeItem('auth_user');
