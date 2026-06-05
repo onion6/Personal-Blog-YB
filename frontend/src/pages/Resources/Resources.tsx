@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, ChevronDown, ExternalLink, ThumbsUp, Wrench, BookOpen, Palette, Globe, Plus, Loader2 } from 'lucide-react';
+import { Search, ChevronDown, ExternalLink, ThumbsUp, Terminal, BookOpen, Palette, Globe, Plus, Loader2 } from 'lucide-react';
 import { getResources, voteResource, createResource } from '../../api';
 import { useToastStore } from '../../store/useToastStore';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -8,10 +8,12 @@ import type { Resource } from '../../types';
 import Card from '../../components/Card/Card';
 import Modal from '../../components/Modal/Modal';
 import ScrollReveal from '../../components/ScrollReveal/ScrollReveal';
+import Icon from '../../components/Icon/Icon';
+import CategoryIcon from '../../components/CategoryIcon/CategoryIcon';
 import styles from './Resources.module.css';
 
 const categories = [
-  { key: '开发工具', label: '开发工具', icon: Wrench, emoji: '🔧' },
+  { key: '开发工具', label: '开发工具', icon: Terminal, emoji: '🔧' },
   { key: '学习资源', label: '学习资源', icon: BookOpen, emoji: '📚' },
   { key: '设计素材', label: '设计素材', icon: Palette, emoji: '🎨' },
   { key: '实用网站', label: '实用网站', icon: Globe, emoji: '🌐' },
@@ -22,6 +24,7 @@ const Resources = () => {
   const { isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
   const [resources, setResources] = useState<Resource[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [openCategories, setOpenCategories] = useState<Set<string>>(new Set(categories.map((c) => c.key)));
   const [votedIds, setVotedIds] = useState<Set<number>>(new Set());
@@ -45,9 +48,11 @@ const Resources = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    setIsLoading(true);
     getResources()
       .then((res) => setResources(res.data))
-      .catch(() => setResources([]));
+      .catch(() => setResources([]))
+      .finally(() => setIsLoading(false));
   }, []);
 
   const parseCategories = (cat: any): string[] => {
@@ -169,7 +174,7 @@ const Resources = () => {
               className={styles.shareBtn}
               onClick={() => isAuthenticated ? setShowShareModal(true) : navigate('/login')}
             >
-              <Plus size={18} />
+              <Icon icon={Plus} size="lg" />
               {isAuthenticated ? '分享资源' : '登录后分享'}
             </button>
           </div>
@@ -178,7 +183,7 @@ const Resources = () => {
 
       <ScrollReveal delay={80}>
         <div className={styles.searchBox}>
-          <Search size={16} className={styles.searchIcon} />
+          <Icon icon={Search} size="md" className={styles.searchIcon} />
           <input
             className={styles.searchInput}
             placeholder="搜索资源..."
@@ -188,17 +193,31 @@ const Resources = () => {
         </div>
       </ScrollReveal>
 
-      {grouped.map((cat, ci) => (
+      {isLoading && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} style={{ display: 'flex', gap: 16, padding: '16px 0' }}>
+              <div style={{ width: 48, height: 48, borderRadius: 'var(--radius-md)', flexShrink: 0, background: 'var(--bg-secondary)' }} />
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ height: 16, width: '40%', background: 'var(--bg-secondary)', borderRadius: 4 }} />
+                <div style={{ height: 14, width: '70%', background: 'var(--bg-secondary)', borderRadius: 4 }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!isLoading && grouped.map((cat, ci) => (
         <ScrollReveal key={cat.key} delay={ci * 100 + 100}>
           <div className={styles.categorySection}>
             <div className={styles.categoryHeader} onClick={() => toggleCategory(cat.key)}>
               <div className={styles.categoryTitle}>
-                <span className={styles.categoryIcon}>{cat.emoji}</span>
+                <CategoryIcon category={cat.key} size="header" />
                 {cat.label}
                 <span style={{ fontSize: 14, color: 'var(--text-secondary)', fontWeight: 400 }}>({cat.items.length})</span>
               </div>
               <span className={`${styles.categoryToggle} ${openCategories.has(cat.key) ? styles.categoryToggleOpen : ''}`}>
-                <ChevronDown size={18} />
+                <Icon icon={ChevronDown} size="lg" />
               </span>
             </div>
             <div className={`${styles.categoryContent} ${openCategories.has(cat.key) ? styles.categoryContentOpen : ''}`}>
@@ -206,9 +225,14 @@ const Resources = () => {
                 <Card key={resource.id} className={styles.resourceCard}>
                   <div className={styles.resourceIcon}>
                     {resource.icon_url ? (
-                      <img src={resource.icon_url} alt={resource.name} />
+                      <img 
+                        src={resource.icon_url} 
+                        alt={resource.name} 
+                        loading="lazy"
+                        onError={(e) => { const img = e.target as HTMLImageElement; img.style.display = 'none'; }}
+                      />
                     ) : (
-                      <span className={styles.resourceIconPlaceholder}>{cat.emoji}</span>
+                      <CategoryIcon category={cat.key} size="card" />
                     )}
                   </div>
                   <div className={styles.resourceInfo}>
@@ -220,11 +244,11 @@ const Resources = () => {
                       className={`${styles.voteBtn} ${votedIds.has(resource.id) ? styles.voteBtnVoted : ''}`}
                       onClick={() => handleVote(resource.id)}
                     >
-                      <ThumbsUp size={12} />
+                      <Icon icon={ThumbsUp} size="xs" />
                       {resource.votes}
                     </button>
                     <a href={resource.url} target="_blank" rel="noopener noreferrer" className={styles.resourceLink}>
-                      <ExternalLink size={16} />
+                      <Icon icon={ExternalLink} size="md" />
                     </a>
                   </div>
                 </Card>
@@ -294,7 +318,7 @@ const Resources = () => {
                   className={`${styles.categoryOption} ${formData.category.includes(cat.key) ? styles.categoryOptionActive : ''}`}
                   onClick={() => handleToggleFormCategory(cat.key)}
                 >
-                  <span className={styles.optionEmoji}>{cat.emoji}</span>
+                  <CategoryIcon category={cat.key} size="header" />
                   {cat.label}
                 </button>
               ))}
@@ -328,7 +352,7 @@ const Resources = () => {
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 size={16} className={styles.spinner} />
+                  <Icon icon={Loader2} size="md" className={styles.spinner} />
                   分享中...
                 </>
               ) : (

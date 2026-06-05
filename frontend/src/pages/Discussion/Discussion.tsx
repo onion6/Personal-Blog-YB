@@ -4,20 +4,66 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark, prism } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { Search, Heart, MessageCircle, ArrowLeft, Clock, Flame, Pencil, BookOpen, Copy, Check } from 'lucide-react';
+import {
+  Search, Heart, MessageCircle, ArrowLeft, Clock, Flame, Pencil, BookOpen,
+  Copy, Check, TrendingUp, Hash
+} from 'lucide-react';
+import Icon from '../../components/Icon/Icon';
+import Avatar from '../../components/Avatar/Avatar';
+import MarkdownEditor from '../../components/MarkdownEditor/MarkdownEditor';
 import { getPosts, getPostById, createPost, likePost, getComments, createComment } from '../../api';
 import { useToastStore } from '../../store/useToastStore';
 import { useThemeStore } from '../../store/useThemeStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import type { Post, Comment } from '../../types';
-import Card from '../../components/Card/Card';
 import Tag from '../../components/Tag/Tag';
 import ScrollReveal from '../../components/ScrollReveal/ScrollReveal';
+import Skeleton from '../../components/Skeleton/Skeleton';
 import styles from './Discussion.module.css';
 
 const filterTags = ['全部', '前端', '后端', '工具', '面试', 'Bug 排查'];
 
 type SortMode = 'latest' | 'hottest';
+
+/* ────── 日期格式化 ────── */
+
+function formatDate(isoStr: string): string {
+  const date = new Date(isoStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  const diffHr = Math.floor(diffMs / 3600000);
+  const diffDay = Math.floor(diffMs / 86400000);
+
+  if (diffMin < 1) return '刚刚';
+  if (diffMin < 60) return `${diffMin} 分钟前`;
+  if (diffHr < 24) return `${diffHr} 小时前`;
+  if (diffDay < 7) return `${diffDay} 天前`;
+  if (diffDay < 30) return `${Math.floor(diffDay / 7)} 周前`;
+
+  // 同年只显示月日，跨年加年份
+  const sameYear = date.getFullYear() === now.getFullYear();
+  if (sameYear) {
+    return `${date.getMonth() + 1}月${date.getDate()}日`;
+  }
+  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+}
+
+function getPostReadingTime(content: string): number {
+  const chars = content.replace(/\s/g, '').length;
+  return Math.max(1, Math.ceil(chars / 400));
+}
+
+function stripMarkdown(content: string): string {
+  return content
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/`[^`]*`/g, '')
+    .replace(/[#*_~>\[\]()!|\\-]/g, '')
+    .replace(/\n+/g, ' ')
+    .trim();
+}
+
+/* ────── 代码高亮组件 ────── */
 
 const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
   const [copied, setCopied] = useState(false);
@@ -38,7 +84,7 @@ const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
   return (
     <div className={styles.codeBlockWrapper}>
       <button className={styles.copyBtn} onClick={handleCopy}>
-        {copied ? <Check size={14} /> : <Copy size={14} />}
+        {copied ? <Icon icon={Check} size="sm" /> : <Icon icon={Copy} size="sm" />}
       </button>
       <SyntaxHighlighter
         style={theme === 'dark' ? atomDark : prism}
@@ -52,29 +98,34 @@ const CodeBlock = ({ node, inline, className, children, ...props }: any) => {
   );
 };
 
+/* ══════════════════════════════════════════════════
+   Discussion 页面
+   ══════════════════════════════════════════════════ */
+
 const Discussion = () => {
   const { theme } = useThemeStore();
   const { addToast } = useToastStore();
   const { isAuthenticated, user } = useAuthStore();
   const navigate = useNavigate();
   const [posts, setPosts] = useState<Post[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('全部');
   const [sortMode, setSortMode] = useState<SortMode>('latest');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
-  const [commentAuthor, setCommentAuthor] = useState('');
   const [commentContent, setCommentContent] = useState('');
   const [showEditor, setShowEditor] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newContent, setNewContent] = useState('');
   const [newTags, setNewTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState('');
 
   useEffect(() => {
+    setIsLoading(true);
     getPosts()
       .then((res) => setPosts(res.data))
-      .catch(() => setPosts([]));
+      .catch(() => setPosts([]))
+      .finally(() => setIsLoading(false));
   }, []);
 
   const parseTags = (tags: any): string[] => {
@@ -83,7 +134,7 @@ const Discussion = () => {
     try {
       const parsed = JSON.parse(tags);
       if (Array.isArray(parsed)) return parsed;
-      if (typeof parsed === 'string') return parseTags(parsed); // 处理可能的双重序列化
+      if (typeof parsed === 'string') return parseTags(parsed);
       return [];
     } catch {
       return [];
@@ -92,9 +143,7 @@ const Discussion = () => {
 
   const readingTime = useMemo(() => {
     if (!selectedPost) return 0;
-    const wordsPerMinute = 200;
-    const textLength = selectedPost.content.split(/\s+/).length;
-    return Math.ceil(textLength / wordsPerMinute);
+    return getPostReadingTime(selectedPost.content);
   }, [selectedPost]);
 
   const toc = useMemo(() => {
@@ -121,6 +170,16 @@ const Discussion = () => {
       if (sortMode === 'hottest') return b.likes - a.likes;
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
+
+  // 精选帖子：点赞最多的一篇
+  const featuredPost = useMemo(() => {
+    if (filtered.length === 0) return null;
+    return filtered.reduce((best, p) => (p.likes > best.likes ? p : best), filtered[0]);
+  }, [filtered]);
+
+  const regularPosts = filtered.filter(p => p.id !== featuredPost?.id);
+
+  /* ────── 操作函数 ────── */
 
   const handleSelectPost = async (post: Post) => {
     try {
@@ -174,22 +233,13 @@ const Discussion = () => {
   const handleCreatePost = async () => {
     if (!newTitle.trim() || !newContent.trim()) return;
     try {
-      const post = await createPost({
-        title: newTitle,
-        content: newContent,
-        tags: newTags, // 直接发送数组
-      });
+      const post = await createPost({ title: newTitle, content: newContent, tags: newTags });
       setPosts([post, ...posts]);
       addToast('发布成功！', 'success');
     } catch {
       const mockPost: Post = {
-        id: Date.now(),
-        title: newTitle,
-        content: newContent,
-        tags: newTags, // 直接使用数组
-        likes: 0,
-        comment_count: 0,
-        created_at: new Date().toISOString().split('T')[0],
+        id: Date.now(), title: newTitle, content: newContent, tags: newTags,
+        likes: 0, comment_count: 0, created_at: new Date().toISOString().split('T')[0],
       };
       setPosts([mockPost, ...posts]);
       addToast('本地模拟发布成功', 'info');
@@ -200,57 +250,60 @@ const Discussion = () => {
     setShowEditor(false);
   };
 
-  const handleAddTag = () => {
-    if (tagInput.trim() && !newTags.includes(tagInput.trim())) {
-      setNewTags([...newTags, tagInput.trim()]);
-      setTagInput('');
-    }
-  };
+  /* ══════════════════════════════════════════════════
+     文章详情页
+     ══════════════════════════════════════════════════ */
 
   if (selectedPost) {
     return (
       <div className={styles.discussionPage}>
         <button className={styles.backBtn} onClick={() => setSelectedPost(null)}>
-          <ArrowLeft size={16} />
+          <Icon icon={ArrowLeft} size="md" />
           返回列表
         </button>
 
         <ScrollReveal>
           <h1 className={styles.detailTitle}>{selectedPost.title}</h1>
           <div className={styles.detailMeta}>
-            <span className={styles.postMetaItem}>
-              <Clock size={14} />
-              {selectedPost.created_at}
-            </span>
-            <span className={styles.postMetaItem}>
-              <BookOpen size={14} />
-              预计阅读时间: {readingTime} 分钟
-            </span>
+            <div className={styles.detailAuthor}>
+              <Avatar
+                name={selectedPost.author_display_name || selectedPost.author_name || '匿名'}
+                avatarUrl={selectedPost.author_avatar}
+                size={40}
+                showRing={false}
+              />
+              <div className={styles.detailAuthorInfo}>
+                <span className={styles.detailAuthorName}>
+                  {selectedPost.author_display_name || selectedPost.author_name || '匿名'}
+                </span>
+                <span className={styles.detailAuthorDate}>
+                  {formatDate(selectedPost.created_at)} · 阅读 {readingTime} 分钟
+                </span>
+              </div>
+            </div>
             <button className={styles.likeBtn} onClick={handleLike}>
-              <Heart size={14} />
+              <Icon icon={Heart} size="sm" />
               {selectedPost.likes}
             </button>
           </div>
-          
+
           <div className={styles.detailContainer}>
             <div className={styles.detailContent}>
-              <ReactMarkdown 
+              <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
-                components={{
-                  code: CodeBlock
-                }}
+                components={{ code: CodeBlock }}
               >
                 {selectedPost.content}
               </ReactMarkdown>
             </div>
-            
+
             {toc.length > 0 && (
               <aside className={styles.tocContainer}>
                 <h3 className={styles.tocTitle}>目录</h3>
                 <ul className={styles.tocList}>
                   {toc.map((item, i) => (
-                    <li 
-                      key={i} 
+                    <li
+                      key={i}
                       className={styles.tocItem}
                       onClick={() => {
                         const el = document.getElementById(item.toLowerCase().replace(/\s+/g, '-'));
@@ -272,6 +325,7 @@ const Discussion = () => {
             {isAuthenticated ? (
               <>
                 <div className={styles.commentInputRow}>
+                  <Avatar name={user?.display_name || user?.username || ''} size={28} showRing={false} />
                   <span className={styles.commentAuthorDisplay}>{user?.display_name || user?.username}</span>
                 </div>
                 <textarea
@@ -293,9 +347,9 @@ const Discussion = () => {
             {comments.map((c) => (
               <div key={c.id} className={styles.commentItem}>
                 <div className={styles.commentHeader}>
-                  <div className={styles.commentAvatar}>{c.author[0]}</div>
+                  <Avatar name={c.author} size={28} showRing={false} />
                   <span className={styles.commentAuthor}>{c.author}</span>
-                  <span className={styles.commentDate}>{c.created_at}</span>
+                  <span className={styles.commentDate}>{formatDate(c.created_at)}</span>
                 </div>
                 <div className={styles.commentBody}>{c.content}</div>
               </div>
@@ -306,144 +360,254 @@ const Discussion = () => {
     );
   }
 
+  /* ══════════════════════════════════════════════════
+     文章列表页
+     ══════════════════════════════════════════════════ */
+
   return (
     <div className={styles.discussionPage}>
+      {/* ── 页面头部 ── */}
       <ScrollReveal>
         <div className={styles.pageHeader}>
-          <h1 className={styles.pageTitle}>技术交流</h1>
-          <p className={styles.pageDesc}>分享技术心得，交流开发经验</p>
+          <div className={styles.headerRow}>
+            <div>
+              <h1 className={styles.pageTitle}>技术交流</h1>
+              <p className={styles.pageDesc}>分享技术心得，交流开发经验</p>
+            </div>
+            <button
+              className={styles.writePostBtn}
+              onClick={() => isAuthenticated ? setShowEditor(!showEditor) : navigate('/login')}
+            >
+              <Icon icon={Pencil} size="sm" />
+              {!isAuthenticated ? '登录后发帖' : showEditor ? '收起编辑器' : '写文章'}
+            </button>
+          </div>
         </div>
       </ScrollReveal>
 
-      <ScrollReveal delay={50}>
-        <button className={styles.toggleEditorBtn} onClick={() => isAuthenticated ? setShowEditor(!showEditor) : navigate('/login')}>
-          <Pencil size={14} style={{ marginRight: 6, display: 'inline', verticalAlign: 'middle' }} />
-          {!isAuthenticated ? '登录后发帖' : showEditor ? '收起编辑器' : '发帖'}
-        </button>
-      </ScrollReveal>
-
+      {/* ── 编辑器 ── */}
       {showEditor && (
         <ScrollReveal>
-          <Card className={styles.editorContainer}>
-            <h3 className={styles.editorTitle}>发布新帖</h3>
-            <input
-              className={styles.editorInput}
-              placeholder="帖子标题"
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-            />
-            <div className={styles.tagInput}>
-              {newTags.map((t, i) => (
-                <Tag key={i} variant="accent" clickable onClick={() => setNewTags(newTags.filter((_, j) => j !== i))}>
-                  {t} x
-                </Tag>
-              ))}
-              <input
-                className={styles.tagInputField}
-                placeholder="添加标签"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag(); } }}
-              />
-            </div>
-            <div className={styles.editorBody}>
-              <textarea
-                className={styles.editorTextarea}
-                placeholder="Markdown 内容..."
-                value={newContent}
-                onChange={(e) => setNewContent(e.target.value)}
-              />
-              <div className={styles.previewPane}>
-                <div className={styles.previewLabel}>预览</div>
-                <div className={styles.detailContent}>
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {newContent || '*开始输入内容...*'}
-                  </ReactMarkdown>
-                </div>
-              </div>
-            </div>
-            <button className={styles.createPostBtn} onClick={handleCreatePost}>发布</button>
-          </Card>
+          <MarkdownEditor
+            title={newTitle}
+            content={newContent}
+            onTitleChange={setNewTitle}
+            onContentChange={setNewContent}
+            tags={newTags}
+            onTagsChange={setNewTags}
+            onSubmit={handleCreatePost}
+            submitLabel="发布帖子"
+          />
         </ScrollReveal>
       )}
 
-      <ScrollReveal delay={100}>
-        <div className={styles.toolbar}>
+      {/* ── 搜索 + 排序 + 标签（合一栏）── */}
+      <ScrollReveal delay={80}>
+        <div className={styles.controlBar}>
           <div className={styles.searchBox}>
-            <Search size={16} className={styles.searchIcon} />
+            <Icon icon={Search} size="sm" className={styles.searchIcon} />
             <input
               className={styles.searchInput}
-              placeholder="搜索帖子..."
+              placeholder="搜索文章..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <div className={styles.sortBtns}>
-            <button
-              className={`${styles.sortBtn} ${sortMode === 'latest' ? styles.sortBtnActive : ''}`}
-              onClick={() => setSortMode('latest')}
-            >
-              <Clock size={14} style={{ marginRight: 4, display: 'inline', verticalAlign: 'middle' }} />
-              最新
-            </button>
-            <button
-              className={`${styles.sortBtn} ${sortMode === 'hottest' ? styles.sortBtnActive : ''}`}
-              onClick={() => setSortMode('hottest')}
-            >
-              <Flame size={14} style={{ marginRight: 4, display: 'inline', verticalAlign: 'middle' }} />
-              最热
-            </button>
+          <div className={styles.controlRight}>
+            <div className={styles.sortBtns}>
+              <button
+                className={`${styles.sortBtn} ${sortMode === 'latest' ? styles.sortBtnActive : ''}`}
+                onClick={() => setSortMode('latest')}
+              >
+                <Icon icon={Clock} size="xs" />
+                最新
+              </button>
+              <button
+                className={`${styles.sortBtn} ${sortMode === 'hottest' ? styles.sortBtnActive : ''}`}
+                onClick={() => setSortMode('hottest')}
+              >
+                <Icon icon={Flame} size="xs" />
+                最热
+              </button>
+            </div>
           </div>
         </div>
-      </ScrollReveal>
 
-      <ScrollReveal delay={150}>
         <div className={styles.filterBar}>
           {filterTags.map((tag) => (
-            <Tag
+            <button
               key={tag}
-              variant={activeFilter === tag ? 'active' : 'default'}
-              clickable
+              className={`${styles.filterChip} ${activeFilter === tag ? styles.filterChipActive : ''}`}
               onClick={() => setActiveFilter(tag)}
             >
+              {tag !== '全部' && <Hash size={10} style={{ opacity: 0.5 }} />}
               {tag}
-            </Tag>
+            </button>
           ))}
         </div>
       </ScrollReveal>
 
-      <div className={styles.postList}>
-        {filtered.map((post, i) => (
-          <ScrollReveal key={post.id} delay={i * 60}>
-            <Card clickable className={styles.postCard} onClick={() => handleSelectPost(post)}>
-              <h3 className={styles.postTitle}>{post.title}</h3>
-              <p className={styles.postSummary}>{post.content.replace(/[#*`\[\]]/g, '').slice(0, 120)}</p>
-              <div className={styles.postTags}>
-                {parseTags(post.tags).map((t) => (
-                  <Tag key={t}>{t}</Tag>
-                ))}
+      {/* ── 加载状态 ── */}
+      {isLoading && (
+        <div className={styles.postList}>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className={styles.postCard} style={{ pointerEvents: 'none' }}>
+              <div className={styles.postAccent} />
+              <div className={styles.postContent}>
+                <div className={styles.postAuthorRow} style={{ gap: 8 }}>
+                  <Skeleton height={24} width={24} circle />
+                  <Skeleton height={14} width={80} />
+                  <Skeleton height={14} width={60} />
+                </div>
+                <Skeleton height={20} width="70%" />
+                <Skeleton height={14} width="90%" />
+                <div style={{ display: 'flex', gap: 16, marginTop: 4 }}>
+                  <Skeleton height={14} width={40} />
+                  <Skeleton height={14} width={40} />
+                </div>
               </div>
-              <div className={styles.postMeta}>
-                <span className={styles.postMetaItem}>
-                  <Heart size={14} />
-                  {post.likes}
-                </span>
-                <span className={styles.postMetaItem}>
-                  <MessageCircle size={14} />
-                  {post.comment_count ?? 0}
-                </span>
-                <span className={styles.postMetaItem}>
-                  <Clock size={14} />
-                  {post.created_at}
-                </span>
-              </div>
-            </Card>
-          </ScrollReveal>
-        ))}
-      </div>
+            </div>
+          ))}
+        </div>
+      )}
 
-      {filtered.length === 0 && (
-        <div className={styles.emptyState}>暂无相关帖子</div>
+      {/* ── 精选帖子 ── */}
+      {!isLoading && featuredPost && featuredPost.likes > 0 && !searchQuery && activeFilter === '全部' && (
+        <ScrollReveal delay={120}>
+          <div className={styles.featuredSection}>
+            <div className={styles.featuredLabel}>
+              <Icon icon={TrendingUp} size="xs" />
+              精选文章
+            </div>
+            <div
+              className={styles.featuredCard}
+              onClick={() => handleSelectPost(featuredPost)}
+            >
+              <div className={styles.featuredAccent} />
+              <div className={styles.featuredBody}>
+                <div className={styles.featuredTop}>
+                  <Avatar
+                    name={featuredPost.author_display_name || featuredPost.author_name || '匿名'}
+                    avatarUrl={featuredPost.author_avatar}
+                    size={40}
+                    showRing={false}
+                  />
+                  <div className={styles.featuredAuthorCol}>
+                    <span className={styles.featuredAuthorName}>
+                      {featuredPost.author_display_name || featuredPost.author_name || '匿名'}
+                    </span>
+                    <span className={styles.featuredMeta}>
+                      {formatDate(featuredPost.created_at)} · 阅读 {getPostReadingTime(featuredPost.content)} 分钟
+                    </span>
+                  </div>
+                </div>
+                <h2 className={styles.featuredTitle}>{featuredPost.title}</h2>
+                <p className={styles.featuredExcerpt}>
+                  {stripMarkdown(featuredPost.content).slice(0, 180)}
+                </p>
+                <div className={styles.featuredFooter}>
+                  <div className={styles.featuredTags}>
+                    {parseTags(featuredPost.tags).map((t) => (
+                      <span key={t} className={styles.featuredTag}>{t}</span>
+                    ))}
+                  </div>
+                  <div className={styles.featuredStats}>
+                    <span className={styles.featuredStat}>
+                      <Icon icon={Heart} size="xs" />
+                      {featuredPost.likes}
+                    </span>
+                    <span className={styles.featuredStat}>
+                      <Icon icon={MessageCircle} size="xs" />
+                      {featuredPost.comment_count ?? 0}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ScrollReveal>
+      )}
+
+      {/* ── 文章列表 ── */}
+      {!isLoading && <div className={styles.postList}>
+        {regularPosts.map((post, i) => {
+          const postTags = parseTags(post.tags);
+          const excerpt = stripMarkdown(post.content).slice(0, 140);
+          const readMin = getPostReadingTime(post.content);
+
+          return (
+            <ScrollReveal key={post.id} delay={i * 40}>
+              <div
+                className={styles.postCard}
+                onClick={() => handleSelectPost(post)}
+              >
+                {/* 左侧装饰条（hover 显示） */}
+                <div className={styles.postAccent} />
+
+                <div className={styles.postContent}>
+                  {/* 作者行 */}
+                  <div className={styles.postAuthorRow}>
+                    <Avatar
+                      name={post.author_display_name || post.author_name || '匿名'}
+                      avatarUrl={post.author_avatar}
+                      size={24}
+                      showRing={false}
+                    />
+                    <span className={styles.postAuthorName}>
+                      {post.author_display_name || post.author_name || '匿名'}
+                    </span>
+                    <span className={styles.postDateDot}>·</span>
+                    <span className={styles.postDate}>{formatDate(post.created_at)}</span>
+                    {postTags.length > 0 && (
+                      <>
+                        <span className={styles.postDateDot}>·</span>
+                        <div className={styles.postInlineTags}>
+                          {postTags.slice(0, 3).map(t => (
+                            <span key={t} className={styles.postInlineTag}>{t}</span>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* 标题 */}
+                  <h3 className={styles.postTitle}>{post.title}</h3>
+
+                  {/* 摘要 */}
+                  {excerpt && (
+                    <p className={styles.postSummary}>{excerpt}</p>
+                  )}
+
+                  {/* 底部：统计 */}
+                  <div className={styles.postBottom}>
+                    <span className={styles.postStat}>
+                      <Icon icon={Heart} size="xs" />
+                      {post.likes}
+                    </span>
+                    <span className={styles.postStat}>
+                      <Icon icon={MessageCircle} size="xs" />
+                      {post.comment_count ?? 0}
+                    </span>
+                    <span className={styles.postStat}>
+                      <Icon icon={BookOpen} size="xs" />
+                      {readMin} 分钟
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </ScrollReveal>
+          );
+        })}
+      </div>}
+
+      {!isLoading && filtered.length === 0 && (
+        <div className={styles.emptyState}>
+          <div className={styles.emptyIcon}>
+            <Icon icon={BookOpen} size="hero" />
+          </div>
+          <p className={styles.emptyText}>暂无相关帖子</p>
+          <p className={styles.emptyHint}>成为第一个发帖的人吧</p>
+        </div>
       )}
     </div>
   );

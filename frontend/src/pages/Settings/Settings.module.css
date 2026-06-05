@@ -48,6 +48,9 @@
 }
 
 .optionBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   padding: 8px 20px;
   border-radius: var(--radius-sm);
   font-size: 14px;
@@ -173,6 +176,10 @@
 }
 
 .addLinkBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   padding: 10px 20px;
   background: rgba(59, 130, 246, 0.1);
   border: 1px dashed rgba(59, 130, 246, 0.3);

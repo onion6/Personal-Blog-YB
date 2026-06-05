@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Copy, Check, Plus, RefreshCw } from 'lucide-react';
+import Icon from '../Icon/Icon';
 import { getInviteCodes, generateInviteCode, type InviteCodeInfo } from '../../api';
 import { useToastStore } from '../../store/useToastStore';
 import styles from './InviteCodeManager.module.css';
@@ -82,7 +83,7 @@ const InviteCodeManager = ({ open, onClose }: Props) => {
           onClick={handleGenerate}
           disabled={generating}
         >
-          {generating ? <RefreshCw size={16} className={styles.spinning} /> : <Plus size={16} />}
+          {generating ? <Icon icon={RefreshCw} size="md" className={styles.spinning} /> : <Icon icon={Plus} size="md" />}
           {generating ? '生成中...' : '生成新邀请码'}
         </button>
 
@@ -105,7 +106,7 @@ const InviteCodeManager = ({ open, onClose }: Props) => {
                   onClick={() => handleCopy(item.code)}
                   title="复制"
                 >
-                  {copiedCode === item.code ? <Check size={14} /> : <Copy size={14} />}
+                  {copiedCode === item.code ? <Icon icon={Check} size="sm" /> : <Icon icon={Copy} size="sm" />}
                 </button>
               </div>
             ))

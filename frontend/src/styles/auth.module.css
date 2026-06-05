@@ -1,0 +1,286 @@
+/* ═══════════════════════════════════════════════════
+   Auth - 登录/注册共享样式
+   设计方向：Modern Auth Card with Grid Background
+   ═══════════════════════════════════════════════════ */
+
+.authPage {
+  min-height: calc(100vh - 200px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 40px 20px;
+}
+
+.gridBg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse 50% 60% at 50% 40%, black 10%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 50% 60% at 50% 40%, black 10%, transparent 70%);
+  pointer-events: none;
+}
+
+[data-theme='light'] .gridBg {
+  background-image:
+    linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+}
+
+.authCard {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--glow-shadow);
+  overflow: hidden;
+}
+
+.accentBar {
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-secondary));
+}
+
+.authBody {
+  padding: 36px 32px 32px;
+}
+
+.authHeader {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.authIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+
+.authTitle {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+  margin-bottom: 6px;
+}
+
+.authSubtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+/* 错误消息 */
+.errorMessage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+/* 表单 */
+.formGroup {
+  margin-bottom: 18px;
+}
+
+.formLabel {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  letter-spacing: 0.2px;
+}
+
+.inputWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inputIcon {
+  position: absolute;
+  left: 14px;
+  display: flex;
+  align-items: center;
+  color: var(--text-secondary);
+  opacity: 0.5;
+  pointer-events: none;
+  transition: opacity var(--transition-fast), color var(--transition-fast);
+}
+
+.inputWrap:focus-within .inputIcon {
+  opacity: 1;
+  color: var(--accent);
+}
+
+.formInput {
+  width: 100%;
+  height: 46px;
+  padding: 0 14px 0 42px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 14px;
+  transition: all var(--transition-fast);
+}
+
+.formInputNoIcon {
+  padding-left: 14px;
+}
+
+.formInput:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.formInput::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+.togglePassword {
+  position: absolute;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  opacity: 0.4;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.togglePassword:hover {
+  opacity: 0.8;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme='light'] .togglePassword:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.formHint {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 5px;
+  opacity: 0.7;
+}
+
+/* 提交按钮 */
+.submitButton {
+  width: 100%;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--accent);
+  color: white;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 600;
+  margin-top: 24px;
+  transition: all var(--transition-fast);
+  box-shadow: 0 2px 12px rgba(59, 130, 246, 0.25);
+}
+
+.submitButton:hover:not(:disabled) {
+  background: #2563eb;
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.35);
+  transform: translateY(-1px);
+}
+
+.submitButton:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 底部链接 */
+.authFooter {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.authFooter a {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.authFooter a:hover {
+  color: var(--accent-secondary);
+}
+
+/* 密码强度指示器 */
+.strengthBar {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.strengthSegment {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--border-color);
+  transition: background var(--transition-fast);
+}
+
+.strengthWeak { background: #ef4444; }
+.strengthMedium { background: #f59e0b; }
+.strengthStrong { background: #22c55e; }
+
+.strengthText {
+  font-size: 11px;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.strengthTextWeak { color: #ef4444; }
+.strengthTextMedium { color: #f59e0b; }
+.strengthTextStrong { color: #22c55e; }
+
+@media (max-width: 480px) {
+  .authBody {
+    padding: 28px 20px 24px;
+  }
+
+  .authTitle {
+    font-size: 22px;
+  }
+}

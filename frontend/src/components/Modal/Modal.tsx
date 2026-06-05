@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from 'react';
 import { X } from 'lucide-react';
+import Icon from '../Icon/Icon';
 import styles from './Modal.module.css';
 
 interface ModalProps {
@@ -33,7 +34,7 @@ const Modal = ({ open, onClose, title, children }: ModalProps) => {
     <div className={`${styles.overlay} ${open ? styles.overlayOpen : ''}`} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <button className={styles.closeBtn} onClick={onClose}>
-          <X size={18} />
+          <Icon icon={X} size="lg" />
         </button>
         {title && <h2 className={styles.title}>{title}</h2>}
         <div className={styles.body}>{children}</div>

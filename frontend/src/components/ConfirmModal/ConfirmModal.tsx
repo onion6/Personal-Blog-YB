@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { AlertTriangle } from 'lucide-react';
+import Icon from '../Icon/Icon';
 import styles from './ConfirmModal.module.css';
 
 interface ConfirmModalProps {
@@ -49,7 +50,7 @@ const ConfirmModal = ({
     <div className={`${styles.overlay} ${open ? styles.overlayOpen : ''}`} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.iconWrapper}>
-          <AlertTriangle size={32} className={styles.icon} />
+          <Icon icon={AlertTriangle} size="2xl" className={styles.icon} />
         </div>
         <h3 className={styles.title}>{title}</h3>
         <p className={styles.message}>{message}</p>

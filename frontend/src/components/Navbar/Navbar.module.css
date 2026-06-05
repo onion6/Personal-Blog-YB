@@ -71,6 +71,13 @@
 .navLinkIcon {
   display: flex;
   align-items: center;
+  opacity: 0.7;
+  transition: opacity var(--transition-fast);
+}
+
+.navLink:hover .navLinkIcon,
+.navLinkActive .navLinkIcon {
+  opacity: 1;
 }
 
 .navActions {
@@ -142,6 +149,12 @@
   padding: 16px;
   margin-top: 16px;
   border-top: 1px solid var(--border-color);
+}
+
+.mobileUserRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .mobileLogoutBtn {

@@ -38,3 +38,10 @@
   font-size: 13px;
   color: var(--text-secondary);
 }
+
+.heartIcon {
+  color: var(--accent);
+  fill: var(--accent);
+  display: inline;
+  vertical-align: middle;
+}

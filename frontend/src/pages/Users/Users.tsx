@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users as UsersIcon, Search, FileText, FolderKanban } from 'lucide-react';
+import Icon from '../../components/Icon/Icon';
+import Avatar from '../../components/Avatar/Avatar';
 import { getUsers, type UserListItem } from '../../api';
 import styles from './Users.module.css';
 
@@ -49,7 +51,7 @@ const Users = () => {
     <div className={styles.usersPage}>
       <div className={styles.pageHeader}>
         <h1 className={styles.pageTitle}>
-          <UsersIcon size={32} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.5rem' }} />
+          <Icon icon={UsersIcon} size="2xl" />
           社区成员
         </h1>
         <p className={styles.pageSubtitle}>发现优秀的开发者，学习他们的经验</p>
@@ -72,7 +74,7 @@ const Users = () => {
       ) : users.length === 0 ? (
         <div className={styles.emptyState}>
           <div className={styles.emptyIcon}>
-            <UsersIcon size={64} />
+            <Icon icon={UsersIcon} size="hero" />
           </div>
           <p className={styles.emptyText}>暂无用户</p>
         </div>
@@ -85,13 +87,7 @@ const Users = () => {
                 className={styles.userCard}
                 onClick={() => handleUserClick(user.id)}
               >
-                {user.avatar_url ? (
-                  <img src={user.avatar_url} alt={user.name} className={styles.avatar} />
-                ) : (
-                  <div className={styles.avatarPlaceholder}>
-                    {getInitial(user.name)}
-                  </div>
-                )}
+                <Avatar name={user.display_name || user.name} avatarUrl={user.avatar_url} size={72} />
                 <h3 className={styles.userName}>{user.display_name || user.name}</h3>
                 {user.title && <p className={styles.userTitle}>{user.title}</p>}
                 {user.bio && <p className={styles.userBio}>{user.bio}</p>}

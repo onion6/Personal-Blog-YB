@@ -1,9 +1,10 @@
 import { CheckCircle, XCircle, Info, AlertTriangle, X } from 'lucide-react';
+import Icon from '../Icon/Icon';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToastStore, type ToastType } from '../../store/useToastStore';
 import styles from './Toast.module.css';
 
-const icons: Record<ToastType, any> = {
+const iconMap: Record<ToastType, any> = {
   success: CheckCircle,
   error: XCircle,
   info: Info,
@@ -17,7 +18,7 @@ const Toast = () => {
     <div className={styles.toastContainer}>
       <AnimatePresence>
         {toasts.map((toast) => {
-          const Icon = icons[toast.type];
+          const ToastIcon = iconMap[toast.type];
           return (
             <motion.div
               key={toast.id}
@@ -27,10 +28,10 @@ const Toast = () => {
               exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
               className={`${styles.toast} ${styles[toast.type]}`}
             >
-              <Icon size={18} className={styles.icon} />
+              <Icon icon={ToastIcon} size="lg" className={styles.icon} />
               <span className={styles.message}>{toast.message}</span>
               <button className={styles.closeBtn} onClick={() => removeToast(toast.id)}>
-                <X size={14} />
+                <Icon icon={X} size="sm" />
               </button>
             </motion.div>
           );

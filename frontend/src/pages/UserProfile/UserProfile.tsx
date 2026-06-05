@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, Briefcase, Clock, Heart, Mail, Code, GraduationCap, FileText, FolderKanban, ThumbsUp, MessageCircle } from 'lucide-react';
+import Icon from '../../components/Icon/Icon';
+import Avatar from '../../components/Avatar/Avatar';
+import HobbyIcon from '../../components/HobbyIcon/HobbyIcon';
 import { getUserProfile, getUserStats, type UserProfile as UserProfileType, type UserStats } from '../../api';
 import styles from './UserProfile.module.css';
 
@@ -77,20 +80,14 @@ const UserProfile = () => {
   return (
     <div className={styles.profilePage}>
       <button className={styles.backButton} onClick={() => navigate('/users')}>
-        <ArrowLeft size={18} />
+        <Icon icon={ArrowLeft} size="lg" />
         返回用户列表
       </button>
 
       <div className={styles.profileHeader}>
         <div className={styles.headerContent}>
           <div className={styles.avatarSection}>
-            {profile.avatar_url ? (
-              <img src={profile.avatar_url} alt={profile.name} className={styles.avatar} />
-            ) : (
-              <div className={styles.avatarPlaceholder}>
-                {getInitial(profile.name)}
-              </div>
-            )}
+            <Avatar name={profile.display_name || profile.name} avatarUrl={profile.avatar_url} size={120} />
           </div>
           <div className={styles.infoSection}>
             <h1 className={styles.profileName}>{profile.display_name || profile.name}</h1>
@@ -127,7 +124,7 @@ const UserProfile = () => {
       {profile.skills && profile.skills.length > 0 && (
         <div className={styles.section}>
           <h2 className={styles.sectionTitle}>
-            <Code size={24} className={styles.sectionIcon} />
+            <Icon icon={Code} size="xl" className={styles.sectionIcon} />
             技能特长
           </h2>
           <div className={styles.skillsGrid}>
@@ -152,7 +149,7 @@ const UserProfile = () => {
       {profile.timeline && profile.timeline.length > 0 && (
         <div className={styles.section}>
           <h2 className={styles.sectionTitle}>
-            <GraduationCap size={24} className={styles.sectionIcon} />
+            <Icon icon={GraduationCap} size="xl" className={styles.sectionIcon} />
             成长经历
           </h2>
           <div className={styles.timeline}>
@@ -170,13 +167,13 @@ const UserProfile = () => {
       {profile.hobbies && profile.hobbies.length > 0 && (
         <div className={styles.section}>
           <h2 className={styles.sectionTitle}>
-            <Heart size={24} className={styles.sectionIcon} />
+            <Icon icon={Heart} size="xl" className={styles.sectionIcon} />
             兴趣爱好
           </h2>
           <div className={styles.hobbiesGrid}>
             {profile.hobbies.map((hobby, index) => (
               <div key={index} className={styles.hobbyItem}>
-                <span className={styles.hobbyIcon}>{hobby.icon}</span>
+                <HobbyIcon name={hobby.icon || hobby.name} size={32} />
                 <span className={styles.hobbyName}>{hobby.name}</span>
               </div>
             ))}
@@ -187,7 +184,7 @@ const UserProfile = () => {
       {profile.contacts && profile.contacts.length > 0 && (
         <div className={styles.section}>
           <h2 className={styles.sectionTitle}>
-            <Mail size={24} className={styles.sectionIcon} />
+            <Icon icon={Mail} size="xl" className={styles.sectionIcon} />
             联系方式
           </h2>
           <div className={styles.contactsGrid}>

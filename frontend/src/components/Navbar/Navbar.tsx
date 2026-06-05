@@ -1,10 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { User, FolderKanban, MessageCircle, BookOpen, Settings, Sun, Moon, Menu, X, LogIn, LogOut, Key, Users } from 'lucide-react';
+import { User, Rocket, MessageCircle, BookOpen, Settings, Sun, Moon, LogIn, LogOut, Key, Users } from 'lucide-react';
 import { useThemeStore } from '../../store/useThemeStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import { getCurrentUser } from '../../api';
 import InviteCodeManager from '../InviteCodeManager/InviteCodeManager';
+import Avatar from '../Avatar/Avatar';
+import Icon from '../Icon/Icon';
 import styles from './Navbar.module.css';
 
 const Navbar = () => {
@@ -19,7 +21,7 @@ const Navbar = () => {
   // 未登录用户：指向公共页面
   const navItems = useMemo(() => [
     { to: isAuthenticated && user ? `/about/${user.id}` : '/about', label: '个人介绍', icon: User },
-    { to: isAuthenticated && user ? `/projects/user/${user.id}` : '/projects', label: '项目展示', icon: FolderKanban },
+    { to: isAuthenticated && user ? `/projects/user/${user.id}` : '/projects', label: '项目展示', icon: Rocket },
     { to: '/discussion', label: '技术交流', icon: MessageCircle },
     { to: '/resources', label: '资源分享', icon: BookOpen },
     { to: '/users', label: '社区成员', icon: Users },
@@ -71,7 +73,7 @@ const Navbar = () => {
               }
             >
               <span className={styles.navLinkIcon}>
-                <item.icon size={16} />
+                <Icon icon={item.icon} size="md" />
               </span>
               {item.label}
             </NavLink>
@@ -80,29 +82,35 @@ const Navbar = () => {
 
         <div className={styles.navActions}>
           <button className={styles.iconBtn} onClick={toggleTheme} title="切换主题">
-            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            {theme === 'dark' ? <Icon icon={Sun} size="lg" /> : <Icon icon={Moon} size="lg" />}
           </button>
           
           {isAuthenticated ? (
             <>
               {user?.role === 'admin' && (
                 <button className={styles.iconBtn} onClick={() => setShowInviteManager(true)} title="邀请码管理">
-                  <Key size={18} />
+                  <Icon icon={Key} size="lg" />
                 </button>
               )}
               <NavLink to="/settings" className={styles.iconBtn} title="设置">
-                <Settings size={18} />
+                <Icon icon={Settings} size="lg" />
               </NavLink>
               <div className={styles.userInfo}>
+                <Avatar
+                  name={user?.display_name || user?.username || ''}
+                  avatarUrl={user?.avatar_url}
+                  size={28}
+                  showRing={false}
+                />
                 <span className={styles.userName}>{user?.display_name || user?.username}</span>
                 <button className={styles.iconBtn} onClick={handleLogout} title="退出登录">
-                  <LogOut size={18} />
+                  <Icon icon={LogOut} size="lg" />
                 </button>
               </div>
             </>
           ) : (
             <NavLink to="/login" className={styles.loginBtn}>
-              <LogIn size={16} />
+              <Icon icon={LogIn} size="md" />
               <span>登录</span>
             </NavLink>
           )}
@@ -130,7 +138,7 @@ const Navbar = () => {
               onClick={() => setMenuOpen(false)}
             >
               <span className={styles.navLinkIcon}>
-                <item.icon size={18} />
+                <Icon icon={item.icon} size="lg" />
               </span>
               {item.label}
             </NavLink>
@@ -146,14 +154,22 @@ const Navbar = () => {
                 onClick={() => setMenuOpen(false)}
               >
                 <span className={styles.navLinkIcon}>
-                  <Settings size={18} />
+                  <Icon icon={Settings} size="lg" />
                 </span>
                 设置
               </NavLink>
               <div className={styles.mobileUserInfo}>
-                <span className={styles.userName}>{user?.display_name || user?.username}</span>
+                <div className={styles.mobileUserRow}>
+                  <Avatar
+                    name={user?.display_name || user?.username || ''}
+                    avatarUrl={user?.avatar_url}
+                    size={32}
+                    showRing={false}
+                  />
+                  <span className={styles.userName}>{user?.display_name || user?.username}</span>
+                </div>
                 <button className={styles.mobileLogoutBtn} onClick={handleLogout}>
-                  <LogOut size={16} />
+                  <Icon icon={LogOut} size="md" />
                   <span>退出登录</span>
                 </button>
               </div>
@@ -165,7 +181,7 @@ const Navbar = () => {
               onClick={() => setMenuOpen(false)}
             >
               <span className={styles.navLinkIcon}>
-                <LogIn size={18} />
+                <Icon icon={LogIn} size="lg" />
               </span>
               登录
             </NavLink>

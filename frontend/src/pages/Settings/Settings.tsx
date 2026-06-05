@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Sun, Moon, LayoutGrid, List, Type, Plus, Trash2, Check } from 'lucide-react';
+import Icon from '../../components/Icon/Icon';
 import { useThemeStore } from '../../store/useThemeStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { useToastStore } from '../../store/useToastStore';
@@ -38,14 +39,14 @@ const Settings = () => {
               className={`${styles.optionBtn} ${theme === 'dark' ? styles.optionBtnActive : ''}`}
               onClick={() => setTheme('dark')}
             >
-              <Moon size={14} style={{ marginRight: 6, display: 'inline', verticalAlign: 'middle' }} />
+              <Icon icon={Moon} size="sm" />
               暗色
             </button>
             <button
               className={`${styles.optionBtn} ${theme === 'light' ? styles.optionBtnActive : ''}`}
               onClick={() => setTheme('light')}
             >
-              <Sun size={14} style={{ marginRight: 6, display: 'inline', verticalAlign: 'middle' }} />
+              <Icon icon={Sun} size="sm" />
               亮色
             </button>
           </div>
@@ -61,14 +62,14 @@ const Settings = () => {
               className={`${styles.optionBtn} ${layout === 'card' ? styles.optionBtnActive : ''}`}
               onClick={() => setLayout('card')}
             >
-              <LayoutGrid size={14} style={{ marginRight: 6, display: 'inline', verticalAlign: 'middle' }} />
+              <Icon icon={LayoutGrid} size="sm" />
               卡片式
             </button>
             <button
               className={`${styles.optionBtn} ${layout === 'list' ? styles.optionBtnActive : ''}`}
               onClick={() => setLayout('list')}
             >
-              <List size={14} style={{ marginRight: 6, display: 'inline', verticalAlign: 'middle' }} />
+              <Icon icon={List} size="sm" />
               列表式
             </button>
           </div>
@@ -86,7 +87,7 @@ const Settings = () => {
                 className={`${styles.optionBtn} ${fontSize === size ? styles.optionBtnActive : ''}`}
                 onClick={() => setFontSize(size)}
               >
-                <Type size={14} style={{ marginRight: 6, display: 'inline', verticalAlign: 'middle' }} />
+                <Icon icon={Type} size="sm" />
                 {size === 'small' ? '小' : size === 'medium' ? '中' : '大'}
               </button>
             ))}
@@ -140,7 +141,7 @@ const Settings = () => {
                   onChange={(e) => updateSocialLink(index, { ...link, url: e.target.value })}
                 />
                 <button className={styles.socialLinkDelete} onClick={() => removeSocialLink(index)}>
-                  <Trash2 size={14} />
+                  <Icon icon={Trash2} size="sm" />
                 </button>
               </div>
             ))}
@@ -149,7 +150,7 @@ const Settings = () => {
             className={styles.addLinkBtn}
             onClick={() => addSocialLink({ name: '', url: '', icon: 'link' })}
           >
-            <Plus size={14} style={{ marginRight: 6, display: 'inline', verticalAlign: 'middle' }} />
+            <Icon icon={Plus} size="sm" />
             添加链接
           </button>
         </Card>

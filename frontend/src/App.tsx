@@ -5,6 +5,7 @@ import { useSettingsStore } from './store/useSettingsStore';
 import { useAuthStore } from './store/useAuthStore';
 import { useToastStore } from './store/useToastStore';
 import { setGlobalErrorHandler } from './api';
+import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 import Navbar from './components/Navbar/Navbar';
 import Footer from './components/Footer/Footer';
 import Toast from './components/Toast/Toast';
@@ -18,6 +19,7 @@ const Login = lazy(() => import('./pages/Login/Login'));
 const Register = lazy(() => import('./pages/Register/Register'));
 const Users = lazy(() => import('./pages/Users/Users'));
 const UserProfile = lazy(() => import('./pages/UserProfile/UserProfile'));
+const NotFound = lazy(() => import('./pages/NotFound/NotFound'));
 
 const fontSizeMap = { small: '14px', medium: '16px', large: '18px' };
 
@@ -81,27 +83,30 @@ const App = () => {
 
   return (
     <BrowserRouter>
-      <Navbar />
-      <main className="layout-content">
-        <Suspense fallback={<Loading />}>
-          <Routes>
-            <Route path="/" element={<Navigate to="/about" replace />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/about/:userId" element={<About />} />
-            <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-            <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
-            <Route path="/projects" element={<Projects />} />
-            <Route path="/projects/user/:userId" element={<Projects />} />
-            <Route path="/discussion" element={<Discussion />} />
-            <Route path="/resources" element={<Resources />} />
-            <Route path="/users" element={<Users />} />
-            <Route path="/users/:userId" element={<UserProfile />} />
-            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-          </Routes>
-        </Suspense>
-      </main>
-      <Footer />
-      <Toast />
+      <ErrorBoundary>
+        <Navbar />
+        <main className="layout-content">
+          <Suspense fallback={<Loading />}>
+            <Routes>
+              <Route path="/" element={<Navigate to="/about" replace />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/about/:userId" element={<About />} />
+              <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+              <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+              <Route path="/projects" element={<Projects />} />
+              <Route path="/projects/user/:userId" element={<Projects />} />
+              <Route path="/discussion" element={<Discussion />} />
+              <Route path="/resources" element={<Resources />} />
+              <Route path="/users" element={<Users />} />
+              <Route path="/users/:userId" element={<UserProfile />} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </main>
+        <Footer />
+        <Toast />
+      </ErrorBoundary>
     </BrowserRouter>
   );
 };

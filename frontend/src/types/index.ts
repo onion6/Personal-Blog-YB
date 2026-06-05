@@ -20,6 +20,9 @@ export interface Post {
   tags: string | string[];
   likes: number;
   comment_count?: number;
+  author_name?: string;
+  author_display_name?: string;
+  author_avatar?: string;
   created_at: string;
 }
 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Github, ExternalLink, FolderKanban, Plus, Loader2, Pencil, Trash2, Save } from 'lucide-react';
+import { Github, ExternalLink, Rocket, Plus, Loader2, Pencil, Trash2, Save, ArrowUpRight, Code2, FolderOpen } from 'lucide-react';
 import { useProjects, useUserProjects, useMyProjects, useCreateProject, useUpdateProject, useDeleteProject } from '../../hooks/useProjects';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { useToastStore } from '../../store/useToastStore';
@@ -12,9 +12,48 @@ import Modal from '../../components/Modal/Modal';
 import ConfirmModal from '../../components/ConfirmModal/ConfirmModal';
 import Skeleton from '../../components/Skeleton/Skeleton';
 import ScrollReveal from '../../components/ScrollReveal/ScrollReveal';
+import Icon from '../../components/Icon/Icon';
 import styles from './Projects.module.css';
 
 const filterTags = ['全部', 'React', 'Vue', 'Node', 'Python', '全栈'];
+
+// 技术栈对应的渐变色
+const techColors: Record<string, string> = {
+  react: '#61dafb',
+  vue: '#42b883',
+  node: '#68a063',
+  typescript: '#3178c6',
+  javascript: '#f7df1e',
+  python: '#3776ab',
+  next: '#ffffff',
+  tailwind: '#38bdf8',
+  docker: '#2496ed',
+  redis: '#dc382d',
+  mysql: '#4479a1',
+  mongodb: '#4db33d',
+  go: '#00add8',
+  rust: '#ce422b',
+  java: '#ed8b00',
+  spring: '#6db33f',
+  angular: '#dd0031',
+  svelte: '#ff3e00',
+  default: '#8b5cf6',
+};
+
+const getTechColor = (tech: string): string => {
+  const key = tech.toLowerCase();
+  for (const [k, v] of Object.entries(techColors)) {
+    if (key.includes(k)) return v;
+  }
+  return techColors.default;
+};
+
+// 根据项目名称生成唯一的渐变种子
+const hashStr = (s: string) => {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) & 0xffff;
+  return h;
+};
 
 const Projects = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -23,25 +62,20 @@ const Projects = () => {
   const { isAuthenticated, user } = useAuthStore();
   const navigate = useNavigate();
 
-  // 判断是否为查看自己的项目（无 userId 参数且已登录）
   const isViewingSelf = !userId && isAuthenticated;
-  // 判断是否为查看指定用户的项目
   const isViewingUser = !!userId;
 
-  // 根据场景加载不同的项目列表
   const allProjects = useProjects();
   const userProjects = useUserProjects(userId ? Number(userId) : undefined, isViewingUser);
   const myProjects = useMyProjects(isViewingSelf);
 
-  // 选择数据源：查看指定用户 → 用户项目，查看自己 → 我的项目，其他 → 所有项目
   const { data: projects = [], isLoading } = isViewingUser
     ? userProjects
     : isViewingSelf
       ? myProjects
       : allProjects;
 
-  // 判断是否为项目所有者（查看自己的项目时可编辑）
-  const isOwner = isViewingSelf;
+  const isOwner = isViewingSelf || (!!userId && !!user && Number(userId) === user.id);
 
   const createProjectMutation = useCreateProject();
   const updateProjectMutation = useUpdateProject();
@@ -198,46 +232,89 @@ const Projects = () => {
     setErrors({});
   };
 
+  // 为项目卡片生成封面渐变
+  const getCoverGradient = (name: string) => {
+    const h = hashStr(name);
+    const hue1 = h % 360;
+    const hue2 = (hue1 + 45) % 360;
+    const hue3 = (hue1 + 120) % 360;
+    return `linear-gradient(135deg, hsla(${hue1}, 60%, 20%, 1) 0%, hsla(${hue2}, 50%, 15%, 1) 50%, hsla(${hue3}, 55%, 18%, 1) 100%)`;
+  };
+
   return (
     <div className={styles.projectsPage}>
+      {/* 页面头部 */}
       <ScrollReveal>
         <div className={styles.pageHeader}>
-          <div className={styles.headerTop}>
-            <div>
+          <div className={styles.headerGridBg} />
+          <div className={styles.headerContent}>
+            <div className={styles.headerLeft}>
+              <div className={styles.headerLabel}>
+                <Icon icon={FolderOpen} size="sm" />
+                <span>Portfolio</span>
+              </div>
               <h1 className={styles.pageTitle}>项目展示</h1>
               <p className={styles.pageDesc}>我参与开发的一些开源和个人项目</p>
+              <div className={styles.headerStats}>
+                <div className={styles.statItem}>
+                  <span className={styles.statNumber}>{projects.length}</span>
+                  <span className={styles.statLabel}>个项目</span>
+                </div>
+                <div className={styles.statDivider} />
+                <div className={styles.statItem}>
+                  <span className={styles.statNumber}>
+                    {projects.filter(p => p.status === '进行中').length}
+                  </span>
+                  <span className={styles.statLabel}>进行中</span>
+                </div>
+                <div className={styles.statDivider} />
+                <div className={styles.statItem}>
+                  <span className={styles.statNumber}>
+                    {projects.filter(p => p.status === '已完成').length}
+                  </span>
+                  <span className={styles.statLabel}>已完成</span>
+                </div>
+              </div>
             </div>
             <button 
               className={styles.createBtn}
               onClick={() => isOwner ? setShowCreateModal(true) : navigate('/login')}
             >
-              <Plus size={18} />
-              {isOwner ? '新建项目' : '登录后新建'}
+              <Icon icon={Plus} size="md" />
+              <span>{isOwner ? '新建项目' : '登录后新建'}</span>
+              <Icon icon={ArrowUpRight} size="sm" />
             </button>
           </div>
         </div>
       </ScrollReveal>
 
+      {/* 筛选栏 */}
       <ScrollReveal delay={100}>
         <div className={styles.filterBar}>
+          <div className={styles.filterIcon}>
+            <Icon icon={Code2} size="sm" />
+          </div>
           {filterTags.map((tag) => (
-            <Tag
+            <button
               key={tag}
-              variant={activeFilter === tag ? 'active' : 'default'}
-              clickable
+              className={`${styles.filterChip} ${activeFilter === tag ? styles.filterChipActive : ''}`}
               onClick={() => setActiveFilter(tag)}
             >
               {tag}
-            </Tag>
+              {tag === '全部' && activeFilter === tag && (
+                <span className={styles.filterCount}>{projects.length}</span>
+              )}
+            </button>
           ))}
         </div>
       </ScrollReveal>
 
+      {/* 项目网格 */}
       <div className={`${styles.projectGrid} ${layout === 'list' ? styles.projectList : ''}`}>
         {isLoading ? (
           Array.from({ length: 6 }).map((_, i) => (
             <Card key={i} className={styles.projectCard}>
-              <Skeleton height={180} />
+              <Skeleton height={200} />
               <div className={styles.projectInfo}>
                 <Skeleton height={24} width="60%" />
                 <Skeleton height={16} width="90%" />
@@ -250,82 +327,137 @@ const Projects = () => {
             </Card>
           ))
         ) : (
-          filtered.map((project, i) => (
-            <ScrollReveal key={project.id} delay={i * 80}>
-              <Card
-                clickable
-                className={styles.projectCard}
-                onClick={() => setSelectedProject(project)}
-              >
-                <div className={styles.projectCover}>
-                  {project.status && (
-                    <div className={`${styles.statusBadge} ${styles[`status${project.status}`]}`}>
-                      {project.status}
-                    </div>
-                  )}
-                  {project.cover_url ? (
-                    <img src={project.cover_url} alt={project.name} />
-                  ) : (
-                    <FolderKanban size={40} />
-                  )}
-                </div>
-                <div className={styles.projectInfo}>
-                  <div className={styles.projectNameRow}>
-                    <h3 className={styles.projectName}>{project.name}</h3>
+          filtered.map((project, i) => {
+            const techList = parseTech(project.tech_stack);
+            return (
+              <ScrollReveal key={project.id} delay={i * 80}>
+                <div
+                  className={styles.projectCard}
+                  onClick={() => setSelectedProject(project)}
+                >
+                  {/* 封面区域 */}
+                  <div 
+                    className={styles.projectCover}
+                    style={!project.cover_url ? { background: getCoverGradient(project.name) } : undefined}
+                  >
+                    {/* 蓝图网格纹理 */}
+                    <div className={styles.coverGrid} />
+                    
+                    {/* 状态徽章 */}
+                    {project.status && (
+                      <div className={`${styles.statusBadge} ${project.status === '进行中' ? styles.statusActive : ''} ${project.status === '已完成' ? styles.statusDone : ''} ${project.status === '已归档' ? styles.statusArchived : ''} ${project.status === '长期维护' ? styles.statusMaintained : ''}`}>
+                        {project.status === '进行中' && <span className={styles.statusDot} />}
+                        {project.status}
+                      </div>
+                    )}
+
+                    {/* 封面内容 */}
+                    {project.cover_url ? (
+                      <img src={project.cover_url} alt={project.name} className={styles.coverImage} loading="lazy" />
+                    ) : (
+                      <div className={styles.coverIconWrap}>
+                        <span className={styles.coverIndex}>
+                          {String(i + 1).padStart(2, '0')}
+                        </span>
+                        <Icon icon={Rocket} size="hero" />
+                      </div>
+                    )}
+
+                    {/* 底部渐变遮罩 */}
+                    <div className={styles.coverFade} />
+
+                    {/* 操作按钮 */}
                     {isProjectOwner(project) && (
-                      <div className={styles.projectActions}>
-                        <button className={styles.actionBtn} onClick={(e) => handleEdit(project, e)} title="编辑">
-                          <Pencil size={14} />
+                      <div className={styles.cardActions}>
+                        <button className={styles.cardActionBtn} onClick={(e) => handleEdit(project, e)} title="编辑">
+                          <Icon icon={Pencil} size="sm" />
                         </button>
-                        <button className={`${styles.actionBtn} ${styles.actionBtnDanger}`} onClick={(e) => handleDelete(project, e)} title="删除">
-                          <Trash2 size={14} />
+                        <button className={`${styles.cardActionBtn} ${styles.cardActionBtnDanger}`} onClick={(e) => handleDelete(project, e)} title="删除">
+                          <Icon icon={Trash2} size="sm" />
                         </button>
                       </div>
                     )}
                   </div>
-                  <p className={styles.projectDesc}>{project.description}</p>
-                  <div className={styles.projectTags}>
-                    {parseTech(project.tech_stack).map((t) => (
-                      <Tag key={t} variant="accent">{t}</Tag>
-                    ))}
-                  </div>
-                  <div className={styles.projectLinks}>
-                    {project.github_url && (
-                      <a
-                        href={project.github_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.projectLink}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Github size={14} />
-                        GitHub
-                      </a>
+
+                  {/* 信息区域 */}
+                  <div className={styles.projectInfo}>
+                    <h3 className={styles.projectName}>{project.name}</h3>
+                    <p className={styles.projectDesc}>{project.description}</p>
+                    
+                    {/* 技术栈 */}
+                    {techList.length > 0 && (
+                      <div className={styles.techRow}>
+                        <div className={styles.techDots}>
+                          {techList.slice(0, 5).map((t) => (
+                            <span 
+                              key={t} 
+                              className={styles.techDot}
+                              style={{ '--dot-color': getTechColor(t) } as React.CSSProperties}
+                              title={t}
+                            />
+                          ))}
+                        </div>
+                        <div className={styles.techLabels}>
+                          {techList.slice(0, 3).map((t) => (
+                            <span key={t} className={styles.techLabel}>{t}</span>
+                          ))}
+                          {techList.length > 3 && (
+                            <span className={styles.techLabelMore}>+{techList.length - 3}</span>
+                          )}
+                        </div>
+                      </div>
                     )}
-                    {project.demo_url && (
-                      <a
-                        href={project.demo_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.projectLink}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <ExternalLink size={14} />
-                        Demo
-                      </a>
+
+                    {/* 链接行 */}
+                    {(project.github_url || project.demo_url) && (
+                      <div className={styles.projectLinks}>
+                        {project.github_url && (
+                          <a
+                            href={project.github_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={styles.projectLink}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Icon icon={Github} size="sm" />
+                            <span>Source</span>
+                            <Icon icon={ArrowUpRight} size="sm" />
+                          </a>
+                        )}
+                        {project.demo_url && (
+                          <a
+                            href={project.demo_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`${styles.projectLink} ${styles.projectLinkPrimary}`}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Icon icon={ExternalLink} size="sm" />
+                            <span>Demo</span>
+                            <Icon icon={ArrowUpRight} size="sm" />
+                          </a>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
-              </Card>
-            </ScrollReveal>
-          ))
+              </ScrollReveal>
+            );
+          })
         )}
       </div>
 
       {!isLoading && filtered.length === 0 && (
-        <div className={styles.emptyState}>暂无相关项目</div>
+        <div className={styles.emptyState}>
+          <div className={styles.emptyIcon}>
+            <Icon icon={FolderOpen} size="hero" />
+          </div>
+          <p className={styles.emptyText}>暂无相关项目</p>
+          <p className={styles.emptyHint}>试试切换其他筛选条件</p>
+        </div>
       )}
 
+      {/* 项目详情弹窗 */}
       <Modal
         open={!!selectedProject}
         onClose={() => setSelectedProject(null)}
@@ -334,22 +466,33 @@ const Projects = () => {
         {selectedProject && (
           <div className={styles.modalContent}>
             <p className={styles.modalDesc}>{selectedProject.description}</p>
-            <div className={styles.modalTags}>
-              {parseTech(selectedProject.tech_stack).map((t) => (
-                <Tag key={t} variant="accent">{t}</Tag>
-              ))}
+            <div className={styles.modalTechSection}>
+              <span className={styles.modalTechLabel}>技术栈</span>
+              <div className={styles.modalTechList}>
+                {parseTech(selectedProject.tech_stack).map((t) => (
+                  <span key={t} className={styles.modalTechTag}>
+                    <span 
+                      className={styles.modalTechDot}
+                      style={{ background: getTechColor(t) }}
+                    />
+                    {t}
+                  </span>
+                ))}
+              </div>
             </div>
             <div className={styles.modalLinks}>
               {selectedProject.github_url && (
                 <a href={selectedProject.github_url} target="_blank" rel="noopener noreferrer" className={styles.modalLinkBtn}>
-                  <Github size={16} />
+                  <Icon icon={Github} size="md" />
                   GitHub
+                  <Icon icon={ArrowUpRight} size="sm" />
                 </a>
               )}
               {selectedProject.demo_url && (
-                <a href={selectedProject.demo_url} target="_blank" rel="noopener noreferrer" className={styles.modalLinkBtn}>
-                  <ExternalLink size={16} />
+                <a href={selectedProject.demo_url} target="_blank" rel="noopener noreferrer" className={`${styles.modalLinkBtn} ${styles.modalLinkBtnPrimary}`}>
+                  <Icon icon={ExternalLink} size="md" />
                   Live Demo
+                  <Icon icon={ArrowUpRight} size="sm" />
                 </a>
               )}
             </div>
@@ -357,6 +500,7 @@ const Projects = () => {
         )}
       </Modal>
 
+      {/* 新建项目弹窗 */}
       <Modal
         open={showCreateModal}
         onClose={handleCloseModal}
@@ -468,7 +612,7 @@ const Projects = () => {
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 size={16} className={styles.spinner} />
+                  <Icon icon={Loader2} size="md" className={styles.spinner} />
                   创建中...
                 </>
               ) : (
@@ -479,6 +623,7 @@ const Projects = () => {
         </div>
       </Modal>
 
+      {/* 编辑项目弹窗 */}
       <Modal
         open={!!editingProject}
         onClose={handleCloseEditModal}
@@ -590,12 +735,12 @@ const Projects = () => {
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 size={16} className={styles.spinner} />
+                  <Icon icon={Loader2} size="md" className={styles.spinner} />
                   保存中...
                 </>
               ) : (
                 <>
-                  <Save size={16} />
+                  <Icon icon={Save} size="md" />
                   保存修改
                 </>
               )}

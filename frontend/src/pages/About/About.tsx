@@ -2,6 +2,9 @@ import { useState, useMemo, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { BarChart3, Briefcase, Heart, Mail, Github, Globe, Pencil, Plus, Trash2, Save, Loader2, Share2, Check } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import Icon from '../../components/Icon/Icon';
+import Avatar from '../../components/Avatar/Avatar';
+import HobbyIcon from '../../components/HobbyIcon/HobbyIcon';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useTypewriter } from '../../hooks/useTypewriter';
 import { useProfile, usePublicProfile, useUpdateProfile } from '../../hooks/useProfile';
@@ -166,8 +169,8 @@ const About = () => {
 
   const { displayText, isComplete } = useTypewriter(p.bio || '', 80, 800);
   const { scrollYProgress } = useScroll();
-  const avatarY = useTransform(scrollYProgress, [0, 1], [0, -100]);
-  const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
+  const avatarY = useTransform(scrollYProgress, [0, 1], [0, -40]);
+  const opacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
 
   const initial = useMemo(() => p.name?.charAt(0)?.toUpperCase() || 'M', [p.name]);
 
@@ -244,11 +247,7 @@ const About = () => {
       <ScrollReveal>
         <motion.section className={styles.heroSection} style={{ y: avatarY, opacity }}>
           <motion.div className={styles.avatarWrap} whileHover={{ rotate: 5, scale: 1.05 }}>
-            {p.avatar_url ? (
-              <img src={p.avatar_url} alt={p.name} className={styles.avatarImg} />
-            ) : (
-              <div className={styles.avatar}><span>{initial}</span></div>
-            )}
+            <Avatar name={p.name} avatarUrl={p.avatar_url} size={120} />
           </motion.div>
           <h1 className={styles.nickname}>{p.name}</h1>
           <p className={styles.signature}>
@@ -258,11 +257,11 @@ const About = () => {
           <div className={styles.heroActions}>
             {isOwner && (
               <button className={styles.editBtnInline} onClick={() => openEdit('basic')} title="编辑基本信息">
-                <Pencil size={14} /> 编辑资料
+                <Icon icon={Pencil} size="sm" /> 编辑资料
               </button>
             )}
             <button className={styles.shareBtn} onClick={handleShare} title="分享主页">
-              {copied ? <Check size={14} /> : <Share2 size={14} />}
+              {copied ? <Icon icon={Check} size="sm" /> : <Icon icon={Share2} size="sm" />}
               {copied ? '已复制' : '分享主页'}
             </button>
           </div>
@@ -273,10 +272,10 @@ const About = () => {
         <section>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>
-              <BarChart3 size={24} className={styles.sectionTitleIcon} />
+              <Icon icon={BarChart3} size="xl" className={styles.sectionTitleIcon} />
               技能雷达
             </h2>
-            {isOwner && <button className={styles.editBtn} onClick={() => openEdit('skills')}><Pencil size={14} /></button>}
+            {isOwner && <button className={styles.editBtn} onClick={() => openEdit('skills')}><Icon icon={Pencil} size="sm" /></button>}
           </div>
           <div className={styles.radarContainer}>
             {p.skills.length > 0 ? <RadarChart skills={p.skills} /> : <p className={styles.emptyHint}>暂无技能数据</p>}
@@ -288,10 +287,10 @@ const About = () => {
         <section>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>
-              <Briefcase size={24} className={styles.sectionTitleIcon} />
+              <Icon icon={Briefcase} size="xl" className={styles.sectionTitleIcon} />
               经历
             </h2>
-            {isOwner && <button className={styles.editBtn} onClick={() => openEdit('timeline')}><Pencil size={14} /></button>}
+            {isOwner && <button className={styles.editBtn} onClick={() => openEdit('timeline')}><Icon icon={Pencil} size="sm" /></button>}
           </div>
           {p.timeline.length > 0 ? (
             <div className={styles.timeline}>
@@ -317,10 +316,10 @@ const About = () => {
         <section>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>
-              <Heart size={24} className={styles.sectionTitleIcon} />
+              <Icon icon={Heart} size="xl" className={styles.sectionTitleIcon} />
               兴趣爱好
             </h2>
-            {isOwner && <button className={styles.editBtn} onClick={() => openEdit('hobbies')}><Pencil size={14} /></button>}
+            {isOwner && <button className={styles.editBtn} onClick={() => openEdit('hobbies')}><Icon icon={Pencil} size="sm" /></button>}
           </div>
           {p.hobbies.length > 0 ? (
             <div className={styles.hobbyGrid}>
@@ -330,7 +329,7 @@ const About = () => {
                   initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }}
                   transition={{ delay: i * 0.05 }}
                 >
-                  <span className={styles.hobbyIcon} style={{ fontSize: 32 }}>{hobby.icon}</span>
+                  <HobbyIcon name={hobby.icon || hobby.name} size={48} />
                   <span className={styles.hobbyName}>{hobby.name}</span>
                 </motion.div>
               ))}
@@ -345,10 +344,10 @@ const About = () => {
         <section>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>
-              <Mail size={24} className={styles.sectionTitleIcon} />
+              <Icon icon={Mail} size="xl" className={styles.sectionTitleIcon} />
               联系方式
             </h2>
-            {isOwner && <button className={styles.editBtn} onClick={() => openEdit('contacts')}><Pencil size={14} /></button>}
+            {isOwner && <button className={styles.editBtn} onClick={() => openEdit('contacts')}><Icon icon={Pencil} size="sm" /></button>}
           </div>
           {p.contacts.length > 0 ? (
             <div className={styles.contactGrid}>
@@ -358,7 +357,7 @@ const About = () => {
                   <motion.a key={c.name} href={c.url} target="_blank" rel="noopener noreferrer"
                     className={styles.contactLink} whileHover={{ x: 5 }}
                   >
-                    <IconComp size={18} />
+                    <Icon icon={IconComp} size="lg" />
                     {c.name}
                   </motion.a>
                 );
@@ -388,14 +387,14 @@ const About = () => {
           <input value={basicForm.avatar_url} onChange={(e) => setBasicForm({ ...basicForm, avatar_url: e.target.value })} placeholder="https://example.com/avatar.png" />
           {basicForm.avatar_url && (
             <div className={styles.avatarPreview}>
-              <img src={basicForm.avatar_url} alt="预览" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              <Avatar name={basicForm.name || '预览'} avatarUrl={basicForm.avatar_url} size={80} />
             </div>
           )}
         </div>
         <div className={styles.formActions}>
           <button className={styles.cancelBtn} onClick={() => setEditSection(null)}>取消</button>
           <button className={styles.saveBtn} onClick={handleSave} disabled={saving}>
-            {saving ? <Loader2 size={16} className={styles.spin} /> : <Save size={16} />}
+            {saving ? <Icon icon={Loader2} size="md" className={styles.spin} /> : <Icon icon={Save} size="md" />}
             保存
           </button>
         </div>
@@ -411,17 +410,17 @@ const About = () => {
               const next = [...skillsForm]; next[i] = { ...next[i], value: Number(e.target.value) }; setSkillsForm(next);
             }} />
             <button className={styles.removeBtn} onClick={() => setSkillsForm(skillsForm.filter((_, j) => j !== i))}>
-              <Trash2 size={14} />
+              <Icon icon={Trash2} size="sm" />
             </button>
           </div>
         ))}
         <button className={styles.addBtn} onClick={() => setSkillsForm([...skillsForm, { label: '', value: 50 }])}>
-          <Plus size={14} /> 添加技能
+          <Icon icon={Plus} size="sm" /> 添加技能
         </button>
         <div className={styles.formActions}>
           <button className={styles.cancelBtn} onClick={() => setEditSection(null)}>取消</button>
           <button className={styles.saveBtn} onClick={handleSave} disabled={saving}>
-            {saving ? <Loader2 size={16} className={styles.spin} /> : <Save size={16} />}
+            {saving ? <Icon icon={Loader2} size="md" className={styles.spin} /> : <Icon icon={Save} size="md" />}
             保存
           </button>
         </div>
@@ -433,7 +432,7 @@ const About = () => {
             <div className={styles.formCardHeader}>
               <span>经历 {i + 1}</span>
               <button className={styles.removeBtn} onClick={() => setTimelineForm(timelineForm.filter((_, j) => j !== i))}>
-                <Trash2 size={14} />
+                <Icon icon={Trash2} size="sm" />
               </button>
             </div>
             <div className={styles.formGroup}>
@@ -457,12 +456,12 @@ const About = () => {
           </div>
         ))}
         <button className={styles.addBtn} onClick={() => setTimelineForm([...timelineForm, { date: '', title: '', desc: '' }])}>
-          <Plus size={14} /> 添加经历
+          <Icon icon={Plus} size="sm" /> 添加经历
         </button>
         <div className={styles.formActions}>
           <button className={styles.cancelBtn} onClick={() => setEditSection(null)}>取消</button>
           <button className={styles.saveBtn} onClick={handleSave} disabled={saving}>
-            {saving ? <Loader2 size={16} className={styles.spin} /> : <Save size={16} />}
+            {saving ? <Icon icon={Loader2} size="md" className={styles.spin} /> : <Icon icon={Save} size="md" />}
             保存
           </button>
         </div>
@@ -478,17 +477,17 @@ const About = () => {
               const next = [...hobbiesForm]; next[i] = { ...next[i], name: e.target.value }; setHobbiesForm(next);
             }} placeholder="爱好名称" />
             <button className={styles.removeBtn} onClick={() => setHobbiesForm(hobbiesForm.filter((_, j) => j !== i))}>
-              <Trash2 size={14} />
+              <Icon icon={Trash2} size="sm" />
             </button>
           </div>
         ))}
         <button className={styles.addBtn} onClick={() => setHobbiesForm([...hobbiesForm, { name: '', icon: '⭐' }])}>
-          <Plus size={14} /> 添加爱好
+          <Icon icon={Plus} size="sm" /> 添加爱好
         </button>
         <div className={styles.formActions}>
           <button className={styles.cancelBtn} onClick={() => setEditSection(null)}>取消</button>
           <button className={styles.saveBtn} onClick={handleSave} disabled={saving}>
-            {saving ? <Loader2 size={16} className={styles.spin} /> : <Save size={16} />}
+            {saving ? <Icon icon={Loader2} size="md" className={styles.spin} /> : <Icon icon={Save} size="md" />}
             保存
           </button>
         </div>
@@ -500,7 +499,7 @@ const About = () => {
             <div className={styles.formCardHeader}>
               <span>联系方式 {i + 1}</span>
               <button className={styles.removeBtn} onClick={() => setContactsForm(contactsForm.filter((_, j) => j !== i))}>
-                <Trash2 size={14} />
+                <Icon icon={Trash2} size="sm" />
               </button>
             </div>
             <div className={styles.formGroup}>
@@ -528,12 +527,12 @@ const About = () => {
           </div>
         ))}
         <button className={styles.addBtn} onClick={() => setContactsForm([...contactsForm, { name: '', icon: 'Globe', url: '' }])}>
-          <Plus size={14} /> 添加联系方式
+          <Icon icon={Plus} size="sm" /> 添加联系方式
         </button>
         <div className={styles.formActions}>
           <button className={styles.cancelBtn} onClick={() => setEditSection(null)}>取消</button>
           <button className={styles.saveBtn} onClick={handleSave} disabled={saving}>
-            {saving ? <Loader2 size={16} className={styles.spin} /> : <Save size={16} />}
+            {saving ? <Icon icon={Loader2} size="md" className={styles.spin} /> : <Icon icon={Save} size="md" />}
             保存
           </button>
         </div>

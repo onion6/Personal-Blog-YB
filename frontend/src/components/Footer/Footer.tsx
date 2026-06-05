@@ -1,22 +1,52 @@
-import { Github, Mail, Heart } from 'lucide-react';
+import { Github, Mail, Twitter, Linkedin, Globe, Heart, Rss, MessageCircle, Send, Link as LinkIcon } from 'lucide-react';
+import { useSettingsStore } from '../../store/useSettingsStore';
+import Icon from '../Icon/Icon';
 import styles from './Footer.module.css';
 
+const iconMap: Record<string, typeof Github> = {
+  github: Github,
+  mail: Mail,
+  email: Mail,
+  twitter: Twitter,
+  linkedin: Linkedin,
+  globe: Globe,
+  website: Globe,
+  rss: Rss,
+  wechat: MessageCircle,
+  telegram: Send,
+};
+
+const getIcon = (iconName: string) => {
+  return iconMap[iconName.toLowerCase()] || LinkIcon;
+};
+
 const Footer = () => {
+  const { socialLinks } = useSettingsStore();
+
   return (
     <footer className={styles.footer}>
       <div className={styles.footerContent}>
-        <div className={styles.footerLinks}>
-          <a href="https://github.com" target="_blank" rel="noopener noreferrer" className={styles.footerLink}>
-            <Github size={16} />
-            GitHub
-          </a>
-          <a href="mailto:hello@example.com" className={styles.footerLink}>
-            <Mail size={16} />
-            Email
-          </a>
-        </div>
+        {socialLinks.length > 0 && (
+          <div className={styles.footerLinks}>
+            {socialLinks.map((link, i) => {
+              const IconComp = getIcon(link.icon);
+              return (
+                <a
+                  key={i}
+                  href={link.url}
+                  target={link.url.startsWith('mailto:') ? undefined : '_blank'}
+                  rel={link.url.startsWith('mailto:') ? undefined : 'noopener noreferrer'}
+                  className={styles.footerLink}
+                >
+                  <Icon icon={IconComp} size="md" />
+                  {link.name}
+                </a>
+              );
+            })}
+          </div>
+        )}
         <div className={styles.footerCopy}>
-          Made with <Heart size={12} style={{ display: 'inline', verticalAlign: 'middle', color: 'var(--accent)' }} /> &copy; {new Date().getFullYear()} MyBlog
+          Made with <Icon icon={Heart} size="xs" className={styles.heartIcon} /> &copy; {new Date().getFullYear()} MyBlog
         </div>
       </div>
     </footer>
