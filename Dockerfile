@@ -2,7 +2,7 @@ FROM node:20-alpine AS frontend-build
 WORKDIR /app/frontend
 RUN npm config set registry https://registry.npmmirror.com
 COPY frontend/package*.json ./
-RUN npm install --include=dev
+RUN npm install && npm install typescript
 COPY frontend/ ./
 RUN npm run build
 
@@ -10,7 +10,7 @@ FROM node:20-alpine AS backend-build
 WORKDIR /app/backend
 RUN npm config set registry https://registry.npmmirror.com
 COPY backend/package*.json ./
-RUN npm install --include=dev
+RUN npm install && npm install typescript
 COPY backend/ ./
 RUN npm run build
 
