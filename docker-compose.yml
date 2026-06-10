@@ -8,12 +8,14 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3001
-      - DB_HOST=172.25.60.241
-      - DB_PORT=3306
-      - DB_USER=my_web_db
+      - DB_HOST=${DB_HOST:-172.25.60.241}
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_USER=${DB_USER:-my_web_db}
       - DB_PASSWORD=${DB_PASSWORD:-666888}
       - DB_NAME=${DB_NAME:-my_web_db}
       - STATIC_DIR=/app/frontend/dist
+      - CORS_ORIGINS=*
+      - JWT_SECRET=${JWT_SECRET:-mc-web-yangcong-2024-secure-key-xK9pLm2v}
 
   nginx:
     build:
