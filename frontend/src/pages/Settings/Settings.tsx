@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sun, Moon, LayoutGrid, List, Type, Plus, Trash2, Check } from 'lucide-react';
+import { Sun, Moon, LayoutGrid, List, Type, Plus, Trash2 } from 'lucide-react';
 import Icon from '../../components/Icon/Icon';
 import { useThemeStore } from '../../store/useThemeStore';
 import { useSettingsStore } from '../../store/useSettingsStore';

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getProjects, getUserProjects, getMyProjects, createProject, updateProject, deleteProject } from '../api';
+import { useAuthStore } from '../store/useAuthStore';
 import type { Project } from '../types';
 
 export const useProjects = () => {
@@ -24,10 +25,11 @@ export const useUserProjects = (userId: number | undefined, enabled = true) => {
 };
 
 export const useMyProjects = (enabled = true) => {
+  const userId = useAuthStore((s) => s.user?.id);
   return useQuery<Project[]>({
-    queryKey: ['myProjects'],
+    queryKey: ['myProjects', userId],
     queryFn: getMyProjects,
-    enabled,
+    enabled: enabled && !!userId,
   });
 };
 

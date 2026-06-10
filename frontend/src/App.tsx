@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useEffect, ReactNode, lazy, Suspense } from 'react';
+import { useEffect, useRef, ReactNode, lazy, Suspense } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useThemeStore } from './store/useThemeStore';
 import { useSettingsStore } from './store/useSettingsStore';
 import { useAuthStore } from './store/useAuthStore';
@@ -62,12 +63,24 @@ function PublicRoute({ children }: { children: ReactNode }) {
 const App = () => {
   const { theme } = useThemeStore();
   const { fontSize } = useSettingsStore();
-  const { loadFromStorage } = useAuthStore();
+  const { loadFromStorage, token, user } = useAuthStore();
   const { addToast } = useToastStore();
+  const queryClient = useQueryClient();
+  const prevUserIdRef = useRef<number | null | undefined>(undefined);
 
   useEffect(() => {
     loadFromStorage();
   }, [loadFromStorage]);
+
+  // 用户切换时（登录/登出/换号）清空所有 React Query 缓存
+  useEffect(() => {
+    const currentUserId = user?.id ?? null;
+    // 跳过首次渲染（首次加载时 prevUserIdRef 为 undefined）
+    if (prevUserIdRef.current !== undefined && prevUserIdRef.current !== currentUserId) {
+      queryClient.clear();
+    }
+    prevUserIdRef.current = currentUserId;
+  }, [user?.id, queryClient]);
 
   useEffect(() => {
     setGlobalErrorHandler((message) => addToast(message, 'error'));

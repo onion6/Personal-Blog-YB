@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users as UsersIcon, Search, FileText, FolderKanban } from 'lucide-react';
+import { Users as UsersIcon, Search } from 'lucide-react';
 import Icon from '../../components/Icon/Icon';
 import Avatar from '../../components/Avatar/Avatar';
 import { getUsers, type UserListItem } from '../../api';
@@ -43,8 +43,16 @@ const Users = () => {
 
   const totalPages = Math.ceil(total / pageSize);
 
-  const getInitial = (name: string) => {
-    return name?.charAt(0)?.toUpperCase() || 'U';
+  // 生成分页页码（围绕当前页显示最多5页）
+  const getPageNumbers = () => {
+    const maxVisible = 5;
+    let start = Math.max(1, page - Math.floor(maxVisible / 2));
+    let end = start + maxVisible - 1;
+    if (end > totalPages) {
+      end = totalPages;
+      start = Math.max(1, end - maxVisible + 1);
+    }
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
   };
 
   return (
@@ -114,18 +122,15 @@ const Users = () => {
               >
                 上一页
               </button>
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                const pageNum = i + 1;
-                return (
-                  <button
-                    key={pageNum}
-                    className={`${styles.pageButton} ${page === pageNum ? styles.pageButtonActive : ''}`}
-                    onClick={() => setPage(pageNum)}
-                  >
-                    {pageNum}
-                  </button>
-                );
-              })}
+              {getPageNumbers().map((pageNum) => (
+                <button
+                  key={pageNum}
+                  className={`${styles.pageButton} ${page === pageNum ? styles.pageButtonActive : ''}`}
+                  onClick={() => setPage(pageNum)}
+                >
+                  {pageNum}
+                </button>
+              ))}
               <button
                 className={styles.pageButton}
                 disabled={page === totalPages}

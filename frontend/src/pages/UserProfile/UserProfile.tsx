@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Briefcase, Clock, Heart, Mail, Code, GraduationCap, FileText, FolderKanban, ThumbsUp, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Heart, Mail, Code, GraduationCap } from 'lucide-react';
 import Icon from '../../components/Icon/Icon';
 import Avatar from '../../components/Avatar/Avatar';
 import HobbyIcon from '../../components/HobbyIcon/HobbyIcon';
@@ -31,15 +31,12 @@ const UserProfile = () => {
       ]);
       setProfile(profileData);
       setStats(statsData);
-    } catch (err: any) {
-      setError(err.response?.data?.error || '加载失败');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '加载失败';
+      setError(msg);
     } finally {
       setLoading(false);
     }
-  };
-
-  const getInitial = (name: string) => {
-    return name?.charAt(0)?.toUpperCase() || 'U';
   };
 
   const formatNumber = (num: number) => {
