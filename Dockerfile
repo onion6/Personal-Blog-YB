@@ -20,8 +20,6 @@ RUN rm -f /etc/nginx/conf.d/default.conf
 # 后端应用镜像
 FROM node:20-alpine AS production
 WORKDIR /app
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && \
-    apk add --no-cache tini
 
 COPY --from=backend-build /app/backend/dist ./backend/dist
 COPY --from=backend-build /app/backend/node_modules ./backend/node_modules
@@ -40,5 +38,4 @@ ENV CORS_ORIGINS=http://localhost
 
 EXPOSE 3001
 
-ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["node", "backend/dist/index.js"]
